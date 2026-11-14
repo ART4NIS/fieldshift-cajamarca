@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FieldShift Cajamarca</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="top">
+    <h1>FieldShift Cajamarca</h1>
+    <p class="disclaimer" role="note">Esta herramienta apoya, no reemplaza, al técnico agrario local.</p>
+    <nav class="steps" aria-label="Pasos">
+      <button type="button" data-step="mapa" aria-current="step">1. Mapa</button>
+      <button type="button" data-step="prioridades">2. Prioridades</button>
+      <button type="button" data-step="resultados">3. Resultados</button>
+      <button type="button" data-step="glosario">4. Glosario</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="step-mapa" class="step">
+      <h2>Elija su parcela</h2>
+      <p>Toque el mapa donde está su parcela o use un punto piloto.</p>
+      <div id="pilots" class="chips"></div>
+      <div id="map" role="application" aria-label="Mapa de la parcela"></div>
+      <p id="coords" aria-live="polite">Aún no eligió un punto.</p>
+      <p id="map-msg" class="msg" aria-live="polite"></p>
+      <button type="button" id="to-prioridades" class="primary" disabled>Continuar</button>
+    </section>
+
+    <section id="step-prioridades" class="step" hidden>
+      <h2>¿Qué es lo más importante para usted?</h2>
+      <p>Mueva cada barra: 0 es nada importante, 5 es muy importante.</p>
+      <div id="sliders"></div>
+      <p id="status" class="msg" aria-live="polite"></p>
+      <button type="button" id="to-resultados" class="primary">Ver resultados</button>
+    </section>
+
+    <section id="step-resultados" class="step" hidden>
+      <h2>Rotaciones recomendadas</h2>
+      <div id="results"></div>
+      <div class="charts">
+        <div class="chart-box"><h3>Riesgos por mes</h3><canvas id="chart-risk"></canvas></div>
+        <div class="chart-box"><h3>Comparación de rotaciones</h3><canvas id="chart-radar"></canvas></div>
+      </div>
+    </section>
+
+    <section id="step-glosario" class="step" hidden>
+      <h2>Glosario</h2>
+      <div id="glossary">Glosario en preparación</div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script type="module" src="js/ui.js"></script>
+</body>
+</html>
