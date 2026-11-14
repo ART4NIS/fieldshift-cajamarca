@@ -47,9 +47,9 @@ NASA Space Apps 2026 · Field Shift · 14–15 nov. Las tareas marcadas con **YA
 | # | Tarea | Listo cuando |
 |---|---|---|
 | 1 | **YA** Lanzar los 2 pedidos de AppEEARS (NDVI + SMAP por punto; SRTM por área) | Ambos en "Queued" o "Processing" |
-| 2 | Guardar `data/power_cache/cajamarca.json` (POWER `monthly` 1991–2024) como plan B | `api.js` lo puede leer |
-| 3 | Correr `build_climate_bias.py` para Huancayo, Puno y Cusco | 4 archivos en `data/pilots/` |
-| 4 | Crear `data/pilots_index.json` (`id`, `nombre`, `lat`, `lon`, `disponible`) | El mapa dibuja los pilotos |
+| 2 | ✅ `data/power_cache/<piloto>.json` para los 4 pilotos (`scripts/build_power_cache.py`) | Probado: la app funciona con POWER caído |
+| 3 | ✅ `build_climate_bias.py` para Huancayo, Puno y Cusco | 4 archivos en `data/pilots/` |
+| 4 | ✅ `data/pilots_index.json` con los 4 pilotos | El mapa dibuja los pilotos |
 | 5 | `scripts/process_appeears.py`: NDVI filtrado por `pixel_reliability` 0–1 (promedio mensual + tendencia), SMAP filtrado por `qual_flag` (promedio + anomalía), SRTM pendiente media y máxima (%) | `cajamarca.json` tiene `ndvi`, `soil_moisture` y `terrain` |
 | 6 | Si a las 13:00 AppEEARS no entregó: NDVI de Giovanni como imagen | PNG en `docs/` |
 
