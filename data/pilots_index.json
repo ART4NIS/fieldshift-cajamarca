@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "descripcion": "Pilot sites with local corrections. Each id has data/pilots/<id>.json (climate_bias and, when available, ndvi, soil_moisture, terrain) and data/power_cache/<id>.json (offline NASA POWER fallback)."
+  },
+  "pilotos": [
+    { "id": "cajamarca", "nombre": "Cajamarca", "region": "Cajamarca", "lat": -7.16, "lon": -78.51, "disponible": true },
+    { "id": "huancayo", "nombre": "Huancayo", "region": "Junín", "lat": -12.07, "lon": -75.21, "disponible": true },
+    { "id": "puno", "nombre": "Puno", "region": "Puno", "lat": -15.84, "lon": -70.02, "disponible": true },
+    { "id": "cusco", "nombre": "Cusco", "region": "Cusco", "lat": -13.52, "lon": -71.97, "disponible": true }
+  ]
+}
