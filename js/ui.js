@@ -1,5 +1,5 @@
 // Thin UI wiring: DOM events -> pure modules (api.js, scoring.js) -> render.
-import { fetchClimate, checkAltitude } from "./api.js";
+import { fetchClimate, checkAltitude, nearestPilot } from "./api.js";
 import { evaluarRotaciones, calendarioRiesgos, CRITERIOS } from "./scoring.js";
 import { renderRiskCalendar, renderRadar } from "./charts.js";
 
@@ -23,6 +23,7 @@ const state = {
   pesos: Object.fromEntries(CRITERIOS.map((c) => [c, 3])),
   cultivos: [],
   rotaciones: [],
+  pilots: [],
 };
 
 async function loadJson(path) {
@@ -64,11 +65,16 @@ function selectPoint(lat, lon, pilotId = null) {
     return;
   }
   $("map-msg").textContent = "";
-  state.parcela = { lat, lon, pilotId };
+  // A click near a pilot site uses that pilot's local corrections (SENAMHI PISCO).
+  const near = pilotId ? null : nearestPilot(lat, lon, state.pilots);
+  const usedPilot = pilotId ?? near?.id ?? null;
+  state.parcela = { lat, lon, pilotId: usedPilot };
   state.clima = null;
   if (marker) marker.setLatLng([lat, lon]);
   else marker = L.marker([lat, lon]).addTo(map);
-  $("coords").textContent = `Latitud ${lat.toFixed(4)}, longitud ${lon.toFixed(4)}`;
+  const pilotName = state.pilots.find((p) => p.id === usedPilot)?.nombre ?? usedPilot;
+  $("coords").textContent = `Latitud ${lat.toFixed(4)}, longitud ${lon.toFixed(4)}` +
+    (usedPilot ? `. Se usan los datos locales del punto piloto ${pilotName}.` : "");
   $("to-prioridades").disabled = false;
 }
 
@@ -81,6 +87,7 @@ async function initMap() {
   map.on("click", (e) => selectPoint(e.latlng.lat, e.latlng.lng));
 
   const pilots = await loadPilots();
+  state.pilots = pilots;
   for (const p of pilots) {
     const btn = document.createElement("button");
     btn.type = "button";

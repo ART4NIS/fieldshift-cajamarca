@@ -9,6 +9,8 @@ import {
   checkAltitude,
   fetchClimate,
   fetchElevation,
+  nearestPilot,
+  distanceKm,
 } from "../js/api.js";
 
 const load = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf-8"));
@@ -73,6 +75,33 @@ test("transform applies the bias correction", () => {
   assert.equal(jan.prob_helada, 0.125);
   const raw = climateFromPower(synthPower([2001]), null)[0];
   assert.deepEqual([raw.tmed, raw.tmin_abs, raw.lluvia_mm, raw.prob_helada], [10, 2, 31, 0]);
+});
+
+test("without a pilot, frost probability comes from POWER T2M_MIN instead of 0", () => {
+  const p = synthPower([2001, 2002, 2003, 2004], { tmin: 5 });
+  p.T2M_MIN["200107"] = 1.5; // below 2 C
+  p.T2M_MIN["200307"] = -0.5; // below 2 C
+  p.T2M_MIN["200407"] = 2; // exactly 2 C is not frost
+  const julio = climateFromPower(p, null)[6];
+  assert.equal(julio.prob_helada, 0.5);
+  assert.equal(climateFromPower(p, null)[0].prob_helada, 0);
+});
+
+test("pilot frost statistics win over the POWER estimate", () => {
+  const p = synthPower([2001], { tmin: -3 });
+  const bias = { monthly: Array.from({ length: 12 }, (_, i) => ({ month: i + 1, pct_years_frost_2: 10 })) };
+  assert.equal(climateFromPower(p, bias)[0].prob_helada, 0.1);
+});
+
+test("nearestPilot snaps clicks within 10 km to a pilot", () => {
+  const pilots = [
+    { id: "cajamarca", lat: -7.16, lon: -78.51 },
+    { id: "puno", lat: -15.84, lon: -70.02 },
+  ];
+  assert.equal(nearestPilot(-7.2, -78.5, pilots)?.id, "cajamarca"); // ~4.6 km
+  assert.equal(nearestPilot(-7.4, -78.51, pilots), null); // ~26.5 km
+  assert.equal(nearestPilot(-7.2, -78.5, []), null);
+  assert.ok(Math.abs(distanceKm(-7.16, -78.51, -7.2, -78.5) - 4.6) < 0.2);
 });
 
 test("fetchClimate falls back to the cache when POWER fails", async () => {
