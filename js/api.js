@@ -109,10 +109,12 @@ export async function fetchElevation(lat, lon, { fetchImpl = globalThis.fetch } 
  */
 export async function fetchClimate(lat, lon, { pilotId, fetchImpl = globalThis.fetch } = {}) {
   let climateBias = null;
+  let periodoCorreccion = null;
   if (pilotId) {
     try {
       const pilot = await getJson(new URL(`pilots/${pilotId}.json`, DATA_BASE).href, fetchImpl);
       climateBias = pilot.climate_bias ?? null;
+      periodoCorreccion = climateBias?.period ?? null;
     } catch {
       climateBias = null;
     }
@@ -140,6 +142,7 @@ export async function fetchClimate(lat, lon, { pilotId, fetchImpl = globalThis.f
     elevation: pointElevation ?? cellElevation,
     elevationSource: pointElevation !== null ? "Copernicus DEM 90 m (Open-Meteo)" : "NASA POWER (celda ~50 km)",
     corregido,
+    periodoCorreccion,
     fuente: corregido ? `${fuente}, corregido con datos locales (SENAMHI PISCO)` : fuente,
   };
 }

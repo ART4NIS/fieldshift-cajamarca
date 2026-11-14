@@ -1,0 +1,128 @@
+{
+  "terminos": [
+    {
+      "termino": "NDVI",
+      "definicion": "Indicador satelital de qué tan verde está la vegetación. En general, un valor más alto indica más vegetación verde."
+    },
+    {
+      "termino": "Anomalía de humedad",
+      "definicion": "Indica si el suelo está más húmedo o más seco de lo habitual para ese lugar y esa época del año."
+    },
+    {
+      "termino": "Riesgo de helada",
+      "definicion": "Para un mes dado, muestra en qué porcentaje de los años analizados hubo al menos un día con una mínima del aire por debajo de 2 °C. La app usa ese umbral como señal de riesgo en cualquier punto. Usamos 2 °C y no 0 °C porque el suelo y las plantas se enfrían más que el aire medido a 2 metros de altura."
+    },
+    {
+      "termino": "Dato satelital vs. dato en campo",
+      "definicion": "El dato satelital representa un área. Una medición en campo describe un punto concreto, como una estación meteorológica."
+    },
+    {
+      "termino": "Parcela",
+      "definicion": "Porción de terreno donde se cultiva. En esta herramienta se representa con el punto que elige en el mapa."
+    },
+    {
+      "termino": "Punto piloto",
+      "definicion": "Lugar para el que el equipo prepara datos locales adicionales. Cajamarca cuenta con correcciones climáticas basadas en SENAMHI PISCO."
+    },
+    {
+      "termino": "Latitud",
+      "definicion": "Coordenada que indica qué tan al norte o al sur está un lugar. Los valores negativos indican el sur del ecuador."
+    },
+    {
+      "termino": "Longitud",
+      "definicion": "Coordenada que indica qué tan al este o al oeste está un lugar. En Perú se usan valores negativos, al oeste del meridiano de Greenwich."
+    },
+    {
+      "termino": "Altitud",
+      "definicion": "Altura de un lugar sobre el nivel del mar, expresada en metros. La herramienta está orientada a zonas desde los 2 500 metros."
+    },
+    {
+      "termino": "Prioridades",
+      "definicion": "Importancia que usted asigna a cada criterio. Las barras van de 0, nada importante, a 5, muy importante; esos valores influyen en el puntaje final."
+    },
+    {
+      "termino": "Rotación de cultivos",
+      "definicion": "Secuencia de distintos cultivos y períodos de descanso en una misma parcela a lo largo de varias campañas."
+    },
+    {
+      "termino": "Ahorro de agua",
+      "definicion": "Criterio que favorece cultivos con menor necesidad estimada de agua por campaña. El puntaje no indica litros ahorrados ni garantiza que la lluvia sea suficiente."
+    },
+    {
+      "termino": "Salud del suelo",
+      "definicion": "Capacidad de la tierra para sostener los cultivos. La herramienta la estima a partir del aporte de nitrógeno y la cobertura del suelo."
+    },
+    {
+      "termino": "Erosión",
+      "definicion": "Cuando la lluvia arrastra la tierra fértil, sobre todo en laderas sin cobertura."
+    },
+    {
+      "termino": "Cobertura del suelo",
+      "definicion": "Parte de la superficie de la tierra protegida por plantas o restos de cultivos. Ayuda a reducir la erosión."
+    },
+    {
+      "termino": "Forraje",
+      "definicion": "Plantas o partes de plantas que sirven de alimento para el ganado. En el puntaje de la herramienta, este criterio también incorpora una estimación de ingresos."
+    },
+    {
+      "termino": "Resiliencia climática",
+      "definicion": "Capacidad de los cultivos para afrontar condiciones desfavorables. La herramienta compara su respuesta estimada a heladas, falta de agua y temperaturas fuera del rango adecuado."
+    },
+    {
+      "termino": "Helada",
+      "definicion": "Descenso de la temperatura hasta el punto en que puede congelarse el agua y dañarse los cultivos. La app usa temperaturas del aire inferiores a 2 °C como señal preventiva de riesgo, no como confirmación de congelamiento en la parcela."
+    },
+    {
+      "termino": "Sequía",
+      "definicion": "Período de escasez de agua. En el calendario, el indicador representa qué tan por debajo de 60 mm está la lluvia mensual promedio; no es una probabilidad de sequía."
+    },
+    {
+      "termino": "Calor",
+      "definicion": "Temperatura elevada que puede afectar a los cultivos. En el calendario, el indicador aumenta cuando la temperatura media mensual supera 24 °C; no es una probabilidad de daño."
+    },
+    {
+      "termino": "Calendario de riesgos",
+      "definicion": "Gráfico que compara por mes los indicadores de helada, falta de lluvia y calor a partir del clima histórico. No es un pronóstico del tiempo."
+    },
+    {
+      "termino": "Puntaje de rotación",
+      "definicion": "Valor de 0 a 100 que combina los cinco criterios según sus prioridades. Un valor mayor indica mejor ajuste dentro de esta comparación; no es un porcentaje de rendimiento ni una garantía de cosecha. Si todas las prioridades son 0, los criterios cuentan por igual."
+    },
+    {
+      "termino": "Nivel de confianza",
+      "definicion": "Alto: punto piloto con datos satelitales. Medio: clima corregido con SENAMHI. Bajo: solo NASA POWER sin corregir."
+    },
+    {
+      "termino": "Pendiente del terreno",
+      "definicion": "Inclinación de la superficie, expresada en porcentaje. Una pendiente de 20 % sube 20 metros por cada 100 metros horizontales. Si falta el dato, el motor usa una estimación de 18 %."
+    },
+    {
+      "termino": "NASA POWER",
+      "definicion": "Servicio de la NASA que ofrece datos climáticos históricos. La herramienta consulta temperatura y lluvia para el punto seleccionado; representan una celda geográfica, no una medición exacta de su parcela."
+    },
+    {
+      "termino": "SENAMHI PISCO",
+      "definicion": "Conjunto de datos climáticos elaborado por el SENAMHI a partir de estaciones y otros datos. Se usa para ajustar las temperaturas y lluvias de NASA POWER en Cajamarca."
+    },
+    {
+      "termino": "Corrección con datos locales",
+      "definicion": "Ajustamos los datos de la NASA con los de SENAMHI, que miden mejor el clima de la sierra."
+    },
+    {
+      "termino": "Datos estimados",
+      "definicion": "Valores aproximados que todavía necesitan validación. Los parámetros de cultivos actuales son estimaciones del equipo y deben revisarse con un agrónomo local."
+    },
+    {
+      "termino": "Técnico agrario o agrónomo",
+      "definicion": "Profesional que ayuda a evaluar el suelo, los cultivos y las condiciones locales. Debe revisar las recomendaciones antes de tomar decisiones de siembra."
+    },
+    {
+      "termino": "Déficit de agua",
+      "definicion": "Cuando la lluvia de un mes no alcanza para lo que necesita el cultivo en ese momento."
+    },
+    {
+      "termino": "Fijación de nitrógeno",
+      "definicion": "Algunas plantas, como la haba, el tarwi y la vicia, toman nitrógeno del aire y lo dejan en el suelo, y así se necesita menos fertilizante."
+    }
+  ]
+}
