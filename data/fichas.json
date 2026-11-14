@@ -1,0 +1,170 @@
+{
+  "_meta": {
+    "version": 1,
+    "fecha_revision": "2026-11-14",
+    "alcance": "Síntesis documental para explicar propuestas del equipo; no es un ensayo de las rotaciones ni una validación de los parámetros del motor.",
+    "nota_comun": "Las cantidades de agua, nitrógeno, cobertura e ingresos del motor siguen siendo estimaciones del equipo pendientes de validación local. No se garantizan cosechas, ahorro de fertilizante ni rentabilidad.",
+    "vacios_comunes": [
+      "No se conocen el análisis de suelo, el riego, las variedades, las plagas ni los costos de esta parcela.",
+      "Las fuentes agronómicas explican mecanismos generales; no prueban cuál de estas tres secuencias es mejor en el punto elegido."
+    ]
+  },
+  "fuentes": [
+    {
+      "id": "fao_bpa",
+      "institucion": "FAO",
+      "titulo": "Development of a Framework for Good Agricultural Practices (2003)",
+      "url": "https://www.fao.org/4/y8704e/y8704e.htm",
+      "seccion": "Anexo, apartados ii y vi",
+      "alcance": "Respalda cobertura del suelo, reciclaje de residuos e inclusión de leguminosas. No evalúa estas secuencias en Cajamarca.",
+      "consultado": "2026-11-14"
+    },
+    {
+      "id": "fao_agua",
+      "institucion": "FAO",
+      "titulo": "Irrigation Water Management: Crop Water Needs, capítulo 3",
+      "url": "https://www.fao.org/4/S2022E/s2022e07.htm",
+      "seccion": "Introducción y sección 3.3.4",
+      "alcance": "Las necesidades de agua dependen del clima, cultivo y etapa de crecimiento; sus rangos son orientativos, no una calibración local.",
+      "consultado": "2026-11-14"
+    },
+    {
+      "id": "inia_haba",
+      "institucion": "INIA Chile",
+      "titulo": "Haba — Nogal Orgánico",
+      "url": "https://sitios.inia.cl/nogalorganico/cubiertas-vegetales/haba/",
+      "seccion": "Ventajas, desventajas y utilización",
+      "alcance": "Respalda el potencial de aporte de nitrógeno y materia orgánica del haba como abono verde. El manejo en Chile no valida calendarios ni dosis para Perú.",
+      "consultado": "2026-11-14"
+    },
+    {
+      "id": "inia_pastos",
+      "institucion": "INIA Perú",
+      "titulo": "Manejo de pastos asociados anuales para la alimentación de ganado lechero (2021)",
+      "url": "https://repositorio.inia.gob.pe/handle/20.500.12955/1298",
+      "seccion": "Resumen del registro institucional",
+      "alcance": "Describe avena, vicia y arveja asociadas para ganado de la sierra. No ensaya la rotación B ni demuestra su rentabilidad.",
+      "consultado": "2026-11-14"
+    },
+    {
+      "id": "fao_tarwi",
+      "institucion": "FAO Ecocrop",
+      "titulo": "Lupinus mutabilis — código 7435",
+      "url": "https://ecocrop.apps.fao.org/ecocrop/srv/en/cropView?id=7435",
+      "seccion": "Notes: KILLING T y FURTHER INF",
+      "alcance": "Respalda fijación de nitrógeno y advierte sensibilidad de plantas jóvenes a heladas y al exceso de humedad. No demuestra ahorro de agua frente a la rotación A.",
+      "consultado": "2026-11-14"
+    },
+    {
+      "id": "inia_vicia",
+      "institucion": "INIA Perú",
+      "titulo": "Tecnología de producción de semilla de vicia forrajera (2013)",
+      "url": "https://repositorio.inia.gob.pe/handle/20.500.12955/159",
+      "seccion": "Resumen del registro institucional",
+      "alcance": "Identifica Vicia sativa como leguminosa forrajera utilizada en Junín. No valida la secuencia C para toda la sierra.",
+      "consultado": "2026-11-14"
+    }
+  ],
+  "fichas": [
+    {
+      "rotacion": "A",
+      "secuencia": "Papa → Maíz → Trigo → Descanso",
+      "por_que": "Sirve como referencia para comparar la propuesta del equipo con alternativas que incorporan leguminosas y forraje. El nombre Tradicional no implica que se haya verificado su uso en cada comunidad.",
+      "beneficios": [
+        {
+          "texto": "Alternar especies permite planificar el manejo de nutrientes y problemas sanitarios; el beneficio depende de los cultivos y de su manejo.",
+          "fuentes": [
+            "fao_bpa"
+          ]
+        }
+      ],
+      "limites": [
+        "Esta secuencia no incluye una leguminosa cultivada para fijar nitrógeno. El descanso, por sí solo, no garantiza recuperar la fertilidad.",
+        "Si el terreno queda desnudo durante el descanso, puede perder suelo con la lluvia; hace falta verificar la cobertura real.",
+        "El puntaje de agua compara demanda estimada por campaña sembrada: un año sin cosecha no se contabiliza como ahorro."
+      ],
+      "revisar": [
+        "¿Qué se cultiva realmente en la parcela y qué problemas sanitarios se repiten?",
+        "¿Se mantienen cobertura y residuos durante el descanso?",
+        "¿Hay agua suficiente para la papa y el maíz durante sus etapas sensibles?"
+      ],
+      "fuentes": [
+        "fao_bpa",
+        "fao_agua"
+      ]
+    },
+    {
+      "rotacion": "B",
+      "secuencia": "Papa → Haba → Cebada → Avena forrajera",
+      "por_que": "Es una opción a explorar cuando se priorizan el cuidado del suelo y el alimento para el ganado. Su posición en la comparación depende del clima y de sus prioridades.",
+      "beneficios": [
+        {
+          "texto": "El haba puede aportar nitrógeno mediante su asociación con bacterias. Lo que queda para el cultivo siguiente depende de los residuos que se devuelvan al suelo y de lo que se retire en la cosecha.",
+          "fuentes": [
+            "inia_haba",
+            "fao_bpa"
+          ]
+        },
+        {
+          "texto": "La avena ofrece una alternativa de forraje documentada en sistemas ganaderos de la sierra. Esto no garantiza mayor producción de leche ni ingresos.",
+          "fuentes": [
+            "inia_pastos"
+          ]
+        }
+      ],
+      "limites": [
+        "La evidencia del haba como abono verde no equivale a una cosecha de grano: no se debe asumir el mismo aporte de nitrógeno.",
+        "Retirar todo el forraje puede disminuir los residuos que protegen el suelo.",
+        "La aptitud del haba como alimento animal debe revisarse: el modelo le asigna valor forrajero, pero la fuente de INIA Chile consultada no recomienda ese uso en su contexto."
+      ],
+      "revisar": [
+        "¿El haba se cosechará para grano o se manejará como abono verde?",
+        "¿Qué parte de los residuos quedará en el terreno?",
+        "¿Qué variedades de avena y cebada se adaptan al lugar y cuándo conviene cortarlas?"
+      ],
+      "fuentes": [
+        "inia_haba",
+        "inia_pastos",
+        "fao_bpa",
+        "fao_agua"
+      ]
+    },
+    {
+      "rotacion": "C",
+      "secuencia": "Papa → Tarwi → Trigo → Vicia sativa",
+      "por_que": "Explora una combinación con dos leguminosas y una especie forrajera. Agua eficiente es el nombre de una alternativa del modelo; todavía no demuestra menor consumo de agua en la parcela.",
+      "beneficios": [
+        {
+          "texto": "El tarwi puede fijar nitrógeno; el aporte disponible para otros cultivos depende del manejo y de las condiciones del suelo.",
+          "fuentes": [
+            "fao_tarwi",
+            "fao_bpa"
+          ]
+        },
+        {
+          "texto": "La vicia se utiliza como leguminosa forrajera en la sierra. Mantener cobertura y residuos puede ayudar a proteger el suelo de la erosión.",
+          "fuentes": [
+            "inia_vicia",
+            "fao_bpa"
+          ]
+        }
+      ],
+      "limites": [
+        "No hay validación local de que esta secuencia completa ahorre agua frente a las otras dos. La menor demanda surge de parámetros estimados del equipo.",
+        "El tarwi joven puede ser sensible a heladas y el cultivo al exceso de humedad; no debe presentarse como resistente en cualquier condición.",
+        "Cortar y retirar la vicia como forraje cambia el aporte de residuos y nutrientes respecto a dejarla como cobertura o abono verde."
+      ],
+      "revisar": [
+        "¿Hay semilla de tarwi y vicia adaptada a la zona?",
+        "¿El terreno drena bien y qué etapas coinciden con meses de helada?",
+        "¿La vicia se retirará como forraje o se devolverá al suelo?"
+      ],
+      "fuentes": [
+        "fao_tarwi",
+        "inia_vicia",
+        "fao_bpa",
+        "fao_agua"
+      ]
+    }
+  ]
+}

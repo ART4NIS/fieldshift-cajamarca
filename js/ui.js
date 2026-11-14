@@ -3,6 +3,8 @@ import { fetchClimate, checkAltitude, nearestPilot } from "./api.js";
 import { evaluarRotaciones, calendarioRiesgos, CRITERIOS } from "./scoring.js";
 import { renderRiskCalendar, renderRadar } from "./charts.js";
 
+import { renderEvidence } from "./evidence.js";
+
 const LAT_MAX = -6;
 const LAT_MIN = -16;
 const FALLBACK_PILOTS = [{ id: "cajamarca", nombre: "Cajamarca", lat: -7.16, lon: -78.51 }];
@@ -20,6 +22,9 @@ const state = {
   parcela: null, // { lat, lon, pilotId }
   clima: null,
   corregido: false,
+  fuente: "No informada",
+  periodoCorreccion: null,
+  fichas: null,
   pesos: Object.fromEntries(CRITERIOS.map((c) => [c, 3])),
   cultivos: [],
   rotaciones: [],
@@ -109,6 +114,8 @@ async function ensureClimate() {
     const res = await fetchClimate(lat, lon, { pilotId });
     state.clima = res.clima;
     state.corregido = res.corregido;
+    state.fuente = res.fuente;
+    state.periodoCorreccion = res.periodoCorreccion;
     const alt = checkAltitude(res.elevation);
     $("status").textContent = alt.ok ? "" : `${alt.mensaje} (Fuente: ${res.elevationSource})`;
     return true;
@@ -158,6 +165,7 @@ function resultCard(r) {
     }
     el.append(ul);
   }
+  el.append(renderEvidence(state.fichas, r, state));
   return el;
 }
 
@@ -222,6 +230,11 @@ async function main() {
   });
   initSliders();
   initGlossary();
+  try {
+    state.fichas = await loadJson("data/fichas.json");
+  } catch {
+    // Results remain usable; each card explains that evidence could not load.
+  }
   try {
     const [c, r] = await Promise.all([loadJson("data/cultivos.json"), loadJson("data/rotaciones.json")]);
     state.cultivos = c.cultivos;
