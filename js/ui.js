@@ -1,6 +1,6 @@
 // Thin UI wiring: DOM events -> pure modules (api.js, scoring.js) -> render.
 import { fetchClimate, checkAltitude, nearestPilot } from "./api.js";
-import { evaluarRotaciones, calendarioRiesgos, CRITERIOS } from "./scoring.js";
+import { evaluarRotaciones, calendarioRiesgos, CRITERIOS, AVISO_SIN_CORRECCION } from "./scoring.js";
 import { renderRiskCalendar, renderRadar } from "./charts.js";
 
 const LAT_MAX = -6;
@@ -130,7 +130,11 @@ function renderResults() {
     return;
   }
   const results = currentResults();
-  box.replaceChildren(...results.map(resultCard));
+  // The uncorrected-climate warning applies to every rotation: show it once, with data, as a banner.
+  $("frost-banner").hidden = state.corregido;
+  box.replaceChildren(
+    ...results.map((r) => resultCard({ ...r, avisos: r.avisos.filter((a) => a !== AVISO_SIN_CORRECCION) })),
+  );
   renderRiskCalendar($("chart-risk"), calendarioRiesgos(state.clima));
   renderRadar($("chart-radar"), results);
 }
