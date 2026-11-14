@@ -1,0 +1,101 @@
+{
+ "fuente": "NASA POWER monthly 1991-2024 corrected with climate_bias (SENAMHI PISCO) from data/pilots/cajamarca.json",
+ "clima": [
+  {
+   "mes": 1,
+   "tmed": 12.6,
+   "tmin_abs": 4.68,
+   "lluvia_mm": 83.7,
+   "lluvia_cv": 0.796,
+   "prob_helada": 0.038
+  },
+  {
+   "mes": 2,
+   "tmed": 12.53,
+   "tmin_abs": 5.22,
+   "lluvia_mm": 91.2,
+   "lluvia_cv": 0.685,
+   "prob_helada": 0.0
+  },
+  {
+   "mes": 3,
+   "tmed": 12.55,
+   "tmin_abs": 5.48,
+   "lluvia_mm": 137.2,
+   "lluvia_cv": 0.423,
+   "prob_helada": 0.0
+  },
+  {
+   "mes": 4,
+   "tmed": 12.64,
+   "tmin_abs": 5.31,
+   "lluvia_mm": 53.7,
+   "lluvia_cv": 0.585,
+   "prob_helada": 0.0
+  },
+  {
+   "mes": 5,
+   "tmed": 12.4,
+   "tmin_abs": 3.75,
+   "lluvia_mm": 17.0,
+   "lluvia_cv": 0.595,
+   "prob_helada": 0.115
+  },
+  {
+   "mes": 6,
+   "tmed": 12.09,
+   "tmin_abs": 3.03,
+   "lluvia_mm": 3.5,
+   "lluvia_cv": 0.986,
+   "prob_helada": 0.038
+  },
+  {
+   "mes": 7,
+   "tmed": 11.54,
+   "tmin_abs": 1.81,
+   "lluvia_mm": 2.5,
+   "lluvia_cv": 2.197,
+   "prob_helada": 0.577
+  },
+  {
+   "mes": 8,
+   "tmed": 11.81,
+   "tmin_abs": 2.35,
+   "lluvia_mm": 3.0,
+   "lluvia_cv": 1.164,
+   "prob_helada": 0.423
+  },
+  {
+   "mes": 9,
+   "tmed": 12.23,
+   "tmin_abs": 3.72,
+   "lluvia_mm": 17.8,
+   "lluvia_cv": 0.983,
+   "prob_helada": 0.0
+  },
+  {
+   "mes": 10,
+   "tmed": 12.66,
+   "tmin_abs": 4.58,
+   "lluvia_mm": 56.7,
+   "lluvia_cv": 0.588,
+   "prob_helada": 0.077
+  },
+  {
+   "mes": 11,
+   "tmed": 12.27,
+   "tmin_abs": 2.96,
+   "lluvia_mm": 40.5,
+   "lluvia_cv": 0.604,
+   "prob_helada": 0.308
+  },
+  {
+   "mes": 12,
+   "tmed": 12.46,
+   "tmin_abs": 4.01,
+   "lluvia_mm": 61.5,
+   "lluvia_cv": 0.528,
+   "prob_helada": 0.192
+  }
+ ]
+}

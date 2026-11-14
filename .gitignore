@@ -8,3 +8,7 @@ Thumbs.db
 raw/
 *.tif
 *.nc
+
+# Local tooling caches
+.atl/
+node_modules/

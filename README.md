@@ -10,7 +10,7 @@ Proyecto para el NASA Space Apps Challenge 2026 — reto *Field Shift: Adapting 
 - SMAP SPL3SMP_E.006 (humedad del suelo, 9 km)
 - SRTM SRTMGL1_NC.003 (elevación y pendiente, 30 m)
 
-Validación local de temperatura: SENAMHI PISCOt v1.1 (vía IRI/LDEO Climate Data Library).
+Validación local con SENAMHI (vía IRI/LDEO Climate Data Library): temperatura PISCOt v1.1 y precipitación PISCOp v2.1.
 
 ## 🌍 Demo en vivo
 
@@ -26,7 +26,12 @@ Cajamarca, Perú (-7.16, -78.51)
 python scripts/build_climate_bias.py --pilot cajamarca --lat -7.16 --lon -78.51
 ```
 
-Genera `data/pilots/cajamarca.json` con la corrección mensual de temperatura (PISCO − POWER) y estadísticas de heladas.
+Genera `data/pilots/cajamarca.json` con la corrección mensual de temperatura (PISCO − POWER), el factor de lluvia (PISCO / POWER) y estadísticas de heladas.
+
+```bash
+python scripts/build_climate_fixture.py --pilot cajamarca   # entrada mensual del motor (referencia de api.js)
+npm test                                                    # tests del motor de reglas
+```
 
 ## Equipo
 

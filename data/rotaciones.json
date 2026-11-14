@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "descripcion": "The 3 rotations compared by the app. Each rotation is a 4-year cycle with one rainfed campaign per year.",
+    "anios": "Each year names a crop id from cultivos.json (sown in its first meses_siembra) or 'descanso' (fallow).",
+    "mes_siembra": "Optional override of the sowing month for that year."
+  },
+  "rotaciones": [
+    {
+      "id": "A",
+      "nombre": "Tradicional",
+      "resumen": "Rotación típica de Cajamarca. Alta demanda de agua y nutrientes, sin fijación de nitrógeno.",
+      "anios": [
+        { "cultivo": "papa" },
+        { "cultivo": "maiz" },
+        { "cultivo": "trigo" },
+        { "cultivo": "descanso" }
+      ]
+    },
+    {
+      "id": "B",
+      "nombre": "Nitrógeno+",
+      "resumen": "Incluye haba, que fija nitrógeno, y termina con avena forrajera para el ganado lechero.",
+      "anios": [
+        { "cultivo": "papa" },
+        { "cultivo": "haba" },
+        { "cultivo": "cebada" },
+        { "cultivo": "avena" }
+      ]
+    },
+    {
+      "id": "C",
+      "nombre": "Agua eficiente",
+      "resumen": "Tarwi y vicia toleran la sequía y fijan nitrógeno; la vicia cubre el suelo y reduce la erosión.",
+      "anios": [
+        { "cultivo": "papa" },
+        { "cultivo": "tarwi" },
+        { "cultivo": "trigo" },
+        { "cultivo": "vicia" }
+      ]
+    }
+  ]
+}
