@@ -18,7 +18,7 @@ NASA Space Apps 2026 · Field Shift · 14–15 nov. Las tareas marcadas con **YA
 { "id": "haba", "nombre": "Haba", "meses_siembra": [10, 11], "duracion_meses": 6,
   "temp_opt_min": 7, "temp_opt_max": 22, "temp_dano_helada": -2,
   "agua_mm_ciclo": 300, "tolerancia_sequia": "media", "cobertura_suelo": 0.7,
-  "fija_n_kg_ha": 100, "forraje": true, "ingresos": "medio",
+  "fija_n_kg_ha": 100, "forraje": 1, "ingresos": "medio",
   "fuente": "FAO GAEZ / INIA", "estimado": true }
 ```
 
@@ -26,7 +26,9 @@ NASA Space Apps 2026 · Field Shift · 14–15 nov. Las tareas marcadas con **YA
 
 ```js
 // 12 elementos (mes 1..12), ya corregidos y en mm/mes
-{ mes, tmin, tmax, lluvia_mm, lluvia_cv, et_mm, prob_helada }
+// tmed: POWER T2M + corrección; tmin_abs: POWER T2M_MIN (mínimo absoluto del mes) + corrección
+// prob_helada: fracción 0-1 de años con Tmin < 2 °C (pilotos: pct_years_frost_2 / 100)
+{ mes, tmed, tmin_abs, lluvia_mm, lluvia_cv, prob_helada }
 ```
 
 **Resultado del motor** (`scoring.js` lo produce; `charts.js` y `ui.js` lo usan)
