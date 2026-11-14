@@ -21,7 +21,9 @@ NASA Space Apps 2026 · Field Shift · 14–15 nov. Las tareas marcadas con **YA
   "temp_opt_min": 7, "temp_opt_max": 22, "temp_dano_helada": -2,
   "agua_mm_ciclo": 300, "tolerancia_sequia": "media", "cobertura_suelo": 0.7,
   "fija_n_kg_ha": 100, "forraje": 1, "ingresos": "medio",
-  "fuente": "FAO GAEZ / INIA", "estimado": true }
+  "estimado": true }
+// Fuente actual de todos los cultivos: "Estimación del equipo (pendiente de validar)" en _meta.fuente.
+// Si un valor se valida con FAO o INIA, agregar "fuente" en ese cultivo y poner "estimado": false.
 ```
 
 **Clima mensual** (`api.js` lo produce; `scoring.js` lo usa)
@@ -68,7 +70,7 @@ NASA Space Apps 2026 · Field Shift · 14–15 nov. Las tareas marcadas con **YA
 
 | # | Tarea | Listo cuando |
 |---|---|---|
-| 1 | **YA** Completar `data/cultivos.json` (8 cultivos, FAO GAEZ / INIA, `estimado: true` si no hay fuente) | Todos los campos con fuente |
+| 1 | ✅ `data/cultivos.json` creado con estimaciones del equipo. **Pendiente:** validar valores con FAO / INIA; por cada valor validado, anotar la fuente real y `estimado: false` | Ningún valor cita una fuente que no se consultó |
 | 2 | `data/rotaciones.json`: las 3 rotaciones como calendario de 24 meses | Cada mes tiene cultivo o "descanso" |
 | 3 | `js/scoring.js` paso 2: puntaje 0–100 por cultivo y mes (helada, agua, temperatura) | Funciones puras, sin DOM |
 | 4 | Pasos 3–4: 5 criterios normalizados 0–100 (más alto = mejor) y promedio ponderado | Pesos en 0 no dividen por 0 |

@@ -13,11 +13,11 @@
       "forraje": "Forage value: 1 = yes, 0.5 = partial (residues/stover), 0 = no.",
       "ingresos": "Relative income: alto | medio | bajo."
     },
-    "estado": "All values are literature estimates pending validation by a local agronomist (INIA / Agencia Agraria Cajamarca).",
-    "fuentes": [
-      "Team briefing table (agua_mm_ciclo, fija_n_kg_ha, forraje, tolerancia_sequia, ingresos)",
-      "FAO ECOCROP / GAEZ crop requirements (temperature ranges, frost tolerance) - to be cross-checked",
-      "INIA technical sheets for Andean crops - to be cross-checked"
+    "fuente": "Estimación del equipo (pendiente de validar)",
+    "estado": "All values are team estimates based on general agronomic knowledge. They have not been checked against FAO, INIA or other primary sources yet and must be validated by a local agronomist (e.g. INIA / Agencia Agraria Cajamarca).",
+    "origen": [
+      "Team briefing table: agua_mm_ciclo, fija_n_kg_ha, forraje, tolerancia_sequia, ingresos",
+      "Team estimates: sowing calendar, cycle length, temperature ranges, frost damage threshold, ground cover"
     ]
   },
   "cultivos": [
