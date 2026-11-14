@@ -73,6 +73,14 @@ button { font: inherit; cursor: pointer; }
 .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #e6efe8; font-size: 0.8rem; }
 .card ul { padding-left: 18px; margin: 8px 0 0; font-size: 0.9rem; color: var(--warn); }
 
+.card details.tech { margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
+.card details.tech summary { cursor: pointer; min-height: 32px; }
+.card details.tech ul { color: var(--muted); }
+
+.note-box { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px; margin: 12px 0; font-size: 0.9rem; }
+.note-box p { margin: 0 0 8px; }
+.note-box ul { padding-left: 18px; margin: 0 0 8px; color: var(--warn); }
+
 .chart-box { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 12px 0; position: relative; }
 .chart-box canvas { max-width: 100%; }
 

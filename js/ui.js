@@ -1,6 +1,17 @@
 // Thin UI wiring: DOM events -> pure modules (api.js, scoring.js) -> render.
 import { fetchClimate, checkAltitude, nearestPilot } from "./api.js";
-import { evaluarRotaciones, calendarioRiesgos, CRITERIOS, AVISO_SIN_CORRECCION } from "./scoring.js";
+import {
+  evaluarRotaciones,
+  calendarioRiesgos,
+  CRITERIOS,
+  AVISO_SIN_CORRECCION,
+  AVISO_DATOS_ESTIMADOS,
+} from "./scoring.js";
+
+const MESES = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
 import { renderRiskCalendar, renderRadar } from "./charts.js";
 
 const LAT_MAX = -6;
@@ -109,6 +120,7 @@ async function ensureClimate() {
     const res = await fetchClimate(lat, lon, { pilotId });
     state.clima = res.clima;
     state.corregido = res.corregido;
+    state.fuente = res.fuente;
     const alt = checkAltitude(res.elevation);
     $("status").textContent = alt.ok ? "" : `${alt.mensaje} (Fuente: ${res.elevationSource})`;
     return true;
@@ -130,10 +142,23 @@ function renderResults() {
     return;
   }
   const results = currentResults();
-  // The uncorrected-climate warning applies to every rotation: show it once, with data, as a banner.
+  // Warnings shared by every rotation are shown once (banner / "before sowing" box), not on each card.
+  // Crop warnings ("Papa: ...") stay on their card even when every rotation has that crop.
+  const cropNames = new Set(results.flatMap((r) => (r.cultivos ?? []).map((c) => c.nombre)));
+  const isCropWarning = (a) => [...cropNames].some((n) => a.startsWith(`${n}:`));
+  const shared = results.length
+    ? results[0].avisos.filter((a) => !isCropWarning(a) && results.every((r) => r.avisos.includes(a)))
+    : [];
   $("frost-banner").hidden = state.corregido;
+  $("estimated-note").hidden = !shared.includes(AVISO_DATOS_ESTIMADOS);
+  const notes = shared.filter((a) => a !== AVISO_SIN_CORRECCION && a !== AVISO_DATOS_ESTIMADOS);
+  $("common-notes").replaceChildren(...notes.map((a) => Object.assign(document.createElement("li"), { textContent: a })));
+  $("before-sowing").hidden = false;
   box.replaceChildren(
-    ...results.map((r) => resultCard({ ...r, avisos: r.avisos.filter((a) => a !== AVISO_SIN_CORRECCION) })),
+    ...results.map((r) => resultCard({
+      ...r,
+      avisos: r.avisos.filter((a) => !shared.includes(a) && a !== AVISO_SIN_CORRECCION && a !== AVISO_DATOS_ESTIMADOS),
+    })),
   );
   renderRiskCalendar($("chart-risk"), calendarioRiesgos(state.clima));
   renderRadar($("chart-radar"), results);
@@ -162,7 +187,37 @@ function resultCard(r) {
     }
     el.append(ul);
   }
+  const detail = techDetail(r.cultivos ?? []);
+  if (detail) el.append(detail);
   return el;
+}
+
+/** Exact frost figures for the local technician, collapsed by default. */
+function techDetail(cultivos) {
+  const seen = new Set();
+  const items = [];
+  for (const c of cultivos) {
+    for (const { mes, prob } of c.heladas ?? []) {
+      const key = `${c.id}-${mes}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items.push(
+        `${c.nombre}, ${MESES[mes - 1]}: ${Math.round(prob * 100)} % de los años con mínima bajo 2 °C; ` +
+        `daño desde ${c.temp_dano_helada} °C.`,
+      );
+    }
+  }
+  if (!items.length) return null;
+  const details = document.createElement("details");
+  details.className = "tech";
+  const summary = document.createElement("summary");
+  summary.textContent = "Detalle para el técnico";
+  const ul = document.createElement("ul");
+  for (const t of [...items, `Fuente: ${state.fuente ?? "NASA POWER"}.`]) {
+    ul.append(Object.assign(document.createElement("li"), { textContent: t }));
+  }
+  details.append(summary, ul);
+  return details;
 }
 
 // ---- priorities --------------------------------------------------------

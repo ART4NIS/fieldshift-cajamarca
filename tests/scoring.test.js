@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   evaluarRotaciones, calendarioRiesgos, puntajeMes, mesesCiclo,
   nivelConfianza, puntajeTotal, CRITERIOS,
+  frecuenciaHelada, toleranciaFrio, avisoHeladaCultivo,
 } from "../js/scoring.js";
 
 const load = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf-8"));
@@ -78,7 +79,31 @@ test("warnings explain missing data and frost months", () => {
   const [r] = evaluarRotaciones(clima, cultivos, rotaciones, {}, {});
   assert.ok(r.avisos.some((a) => a.includes("sin corrección local")));
   assert.ok(r.avisos.some((a) => a.includes("Pendiente")));
-  assert.ok(r.avisos.some((a) => a.includes("riesgo de helada")));
+  assert.ok(r.avisos.some((a) => /helada (frecuente|la mayoría|todos)/.test(a)));
+  assert.ok(r.avisos.every((a) => !a.includes("técnico")), "per-crop warnings no longer defer to a technician");
+});
+
+test("frost frequency uses plain words and fixed rounded fractions", () => {
+  assert.equal(frecuenciaHelada(0.31), "frecuente (1 de cada 3 años)");
+  assert.equal(frecuenciaHelada(0.25), "frecuente (1 de cada 3 años)");
+  assert.equal(frecuenciaHelada(0.58), "la mayoría de los años");
+  assert.equal(frecuenciaHelada(1), "todos los años");
+  assert.equal(frecuenciaHelada(0.12), "algunos años (1 de cada 5)");
+  assert.equal(frecuenciaHelada(0), "rara (menos de 1 año de cada 10)");
+});
+
+test("cold tolerance distinguishes sensitive from hardy crops", () => {
+  assert.equal(toleranciaFrio(-1), "Es muy sensible al frío.");
+  assert.equal(toleranciaFrio(-3), "Aguanta heladas suaves.");
+  assert.equal(toleranciaFrio(-5), "Aguanta bien las heladas.");
+});
+
+test("frost warning groups months that share a frequency", () => {
+  const txt = avisoHeladaCultivo("Papa", [{ mes: 7, prob: 0.58 }, { mes: 8, prob: 0.6 }, { mes: 11, prob: 0.31 }], -1);
+  assert.equal(
+    txt,
+    "Papa: en julio y agosto, helada la mayoría de los años; en noviembre, helada frecuente (1 de cada 3 años). Es muy sensible al frío.",
+  );
 });
 
 test("risk calendar marks the Cajamarca dry season and frost months", () => {
