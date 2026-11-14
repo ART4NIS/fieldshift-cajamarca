@@ -63,8 +63,30 @@ async function getJson(url, fetchImpl) {
   return res.json();
 }
 
+const ELEVATION_URL = "https://api.open-meteo.com/v1/elevation";
+
+export function buildElevationUrl(lat, lon) {
+  return `${ELEVATION_URL}?${new URLSearchParams({ latitude: lat, longitude: lon })}`;
+}
+
 /**
- * Fetch POWER (cache fallback) and return { clima, elevation, corregido, fuente }.
+ * Point elevation (m) from Open-Meteo (Copernicus DEM, 90 m), or null on any failure.
+ * Much finer than POWER's ~50 km cell, which averages valleys and slopes together.
+ */
+export async function fetchElevation(lat, lon, { fetchImpl = globalThis.fetch } = {}) {
+  try {
+    const body = await getJson(buildElevationUrl(lat, lon), fetchImpl);
+    const value = body?.elevation?.[0];
+    return Number.isFinite(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch POWER (cache fallback) and return
+ * { clima, elevation, elevationSource, corregido, fuente }.
+ * Elevation prefers Open-Meteo and falls back to the POWER grid cell.
  * Without a pilot (or a pilot without climate_bias) the climate is uncorrected.
  */
 export async function fetchClimate(lat, lon, { pilotId, fetchImpl = globalThis.fetch } = {}) {
@@ -77,6 +99,8 @@ export async function fetchClimate(lat, lon, { pilotId, fetchImpl = globalThis.f
       climateBias = null;
     }
   }
+
+  const elevationPromise = fetchElevation(lat, lon, { fetchImpl });
 
   let body;
   let fuente;
@@ -91,9 +115,12 @@ export async function fetchClimate(lat, lon, { pilotId, fetchImpl = globalThis.f
 
   const power = body.properties?.parameter ?? body;
   const corregido = Boolean(climateBias);
+  const pointElevation = await elevationPromise;
+  const cellElevation = body.geometry?.coordinates?.[2] ?? null;
   return {
     clima: climateFromPower(power, climateBias),
-    elevation: body.geometry?.coordinates?.[2] ?? null,
+    elevation: pointElevation ?? cellElevation,
+    elevationSource: pointElevation !== null ? "Copernicus DEM 90 m (Open-Meteo)" : "NASA POWER (celda ~50 km)",
     corregido,
     fuente: corregido ? `${fuente}, corregido con datos locales (SENAMHI PISCO)` : fuente,
   };

@@ -2,7 +2,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { buildPowerUrl, climateFromPower, checkAltitude, fetchClimate } from "../js/api.js";
+import {
+  buildPowerUrl,
+  buildElevationUrl,
+  climateFromPower,
+  checkAltitude,
+  fetchClimate,
+  fetchElevation,
+} from "../js/api.js";
 
 const load = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf-8"));
 const pilot = load("../data/pilots/cajamarca.json");
@@ -81,8 +88,37 @@ test("fetchClimate falls back to the cache when POWER fails", async () => {
   const res = await fetchClimate(-7.16, -78.51, { pilotId: "cajamarca", fetchImpl });
   assert.equal(res.clima.length, 12);
   assert.equal(res.elevation, 2750);
+  assert.match(res.elevationSource, /POWER/);
   assert.equal(res.corregido, true);
   assert.match(res.fuente, /copia guardada/);
+});
+
+test("fetchClimate prefers Open-Meteo elevation over the POWER cell", async () => {
+  const body = {
+    geometry: { coordinates: [-77.04, -12.05, 1195] },
+    properties: { parameter: synthPower([2001, 2002]) },
+  };
+  const fetchImpl = async (url) => {
+    if (String(url).includes("open-meteo")) return { ok: true, json: async () => ({ elevation: [148] }) };
+    return { ok: true, json: async () => body };
+  };
+  const res = await fetchClimate(-12.05, -77.04, { fetchImpl });
+  assert.equal(res.elevation, 148);
+  assert.match(res.elevationSource, /Open-Meteo/);
+  assert.equal(checkAltitude(res.elevation).ok, false);
+});
+
+test("fetchElevation returns null on failure or non-numeric data", async () => {
+  assert.equal(await fetchElevation(0, 0, { fetchImpl: async () => { throw new Error("offline"); } }), null);
+  assert.equal(await fetchElevation(0, 0, { fetchImpl: async () => ({ ok: false, status: 429 }) }), null);
+  assert.equal(await fetchElevation(0, 0, { fetchImpl: async () => ({ ok: true, json: async () => ({ elevation: [NaN] }) }) }), null);
+});
+
+test("buildElevationUrl targets Open-Meteo with lat/lon", () => {
+  const url = new URL(buildElevationUrl(-7.16, -78.51));
+  assert.equal(url.hostname, "api.open-meteo.com");
+  assert.equal(url.searchParams.get("latitude"), "-7.16");
+  assert.equal(url.searchParams.get("longitude"), "-78.51");
 });
 
 test("checkAltitude warns below 2500 m", () => {

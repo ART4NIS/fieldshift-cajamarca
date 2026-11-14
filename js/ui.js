@@ -103,7 +103,7 @@ async function ensureClimate() {
     state.clima = res.clima;
     state.corregido = res.corregido;
     const alt = checkAltitude(res.elevation);
-    $("status").textContent = alt.ok ? "" : alt.mensaje;
+    $("status").textContent = alt.ok ? "" : `${alt.mensaje} (Fuente: ${res.elevationSource})`;
     return true;
   } catch {
     $("status").textContent = "No pudimos obtener el clima de este punto. Intente de nuevo o elija un punto piloto.";
