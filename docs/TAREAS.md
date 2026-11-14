@@ -9,6 +9,8 @@ NASA Space Apps 2026 · Field Shift · 14–15 nov. Las tareas marcadas con **YA
 - Verificado: NASA POWER acepta llamadas desde el navegador (CORS). Usar el endpoint `monthly`, no `climatology`.
 
 > **Hallazgo clave:** NASA POWER no registra ninguna helada en Cajamarca entre 1991 y 2024, y sus mínimas salen 2–4 °C más altas que las de PISCO. La app aplica una corrección mensual y usa un umbral de helada de 2 °C a 2 m.
+>
+> **Lluvia:** POWER da 464 mm/año contra 556 mm de PISCOp (SENAMHI). Subestima la época de lluvias (marzo: −39 %) y sobrestima la seca. Se corrige con un factor mensual.
 
 ## Contratos entre piezas
 
@@ -27,6 +29,7 @@ NASA Space Apps 2026 · Field Shift · 14–15 nov. Las tareas marcadas con **YA
 ```js
 // 12 elementos (mes 1..12), ya corregidos y en mm/mes
 // tmed: POWER T2M + corrección; tmin_abs: POWER T2M_MIN (mínimo absoluto del mes) + corrección
+// lluvia_mm: POWER PRECTOTCORR × días del mes × lluvia_factor (PISCOp / POWER)
 // prob_helada: fracción 0-1 de años con Tmin < 2 °C (pilotos: pct_years_frost_2 / 100)
 { mes, tmed, tmin_abs, lluvia_mm, lluvia_cv, prob_helada }
 ```
@@ -56,7 +59,7 @@ NASA Space Apps 2026 · Field Shift · 14–15 nov. Las tareas marcadas con **YA
 | 2 | `index.html` con 4 pasos: mapa → prioridades → resultados → glosario, más el aviso "apoya, no reemplaza al técnico local" | Se ve en 360 px sin scroll horizontal |
 | 3 | Mapa Leaflet 1.9.4: clic marca la parcela, pilotos desde `pilots_index.json`, latitud entre −6 y −16 | Al hacer clic aparecen lat/lon |
 | 4 | Validar altitud ≥ 2 500 m con `geometry.coordinates[2]` de POWER | Un punto en Lima muestra advertencia |
-| 5 | `js/api.js`: POWER `monthly`, quitar claves `YYYY13`, mm/día → mm/mes, EVPTRNS ÷ 2.45 → mm, aplicar `climate_bias`, usar `power_cache` si falla | Devuelve los 12 meses del contrato |
+| 5 | `js/api.js`: POWER `monthly` (`T2M`, `T2M_MIN`, `PRECTOTCORR`), quitar claves `YYYY13`, mm/día → mm/mes, aplicar `climate_bias` (temperatura + `lluvia_factor`), usar `power_cache` si falla. Referencia exacta: `scripts/build_climate_fixture.py` | Devuelve los 12 meses del contrato e igual que el fixture de Cajamarca |
 | 6 | Panel de prioridades: 5 sliders 0–5 con texto simple | Mover un slider recalcula |
 | 7 | `js/charts.js` (Chart.js 4.4.4): calendario de riesgos y radar de rotaciones | Se ven con datos de prueba |
 | 8 | Primer deploy a las 17:00 | El link público abre |

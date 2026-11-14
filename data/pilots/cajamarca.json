@@ -3,17 +3,20 @@
   "lat": -7.16,
   "lon": -78.51,
   "climate_bias": {
-    "description": "Monthly offsets to add to NASA POWER temperatures (bias = PISCO - POWER). Frost statistics come from PISCO daily Tmin at 2 m.",
+    "description": "Monthly corrections for NASA POWER: add tmin_bias/tmax_bias to temperatures (bias = PISCO - POWER) and multiply precipitation by lluvia_factor (PISCO / POWER). Frost statistics come from PISCO daily Tmin at 2 m.",
     "period": "1991-2016",
     "generated": "2026-11-14",
     "confidence": "estimated",
     "sources": {
       "power": "NASA POWER daily API, community AG, T2M_MIN/T2M_MAX",
-      "pisco": "SENAMHI PISCOt v1.1 stable daily, via IRI/LDEO Climate Data Library"
+      "pisco": "SENAMHI PISCOt v1.1 stable daily, via IRI/LDEO Climate Data Library",
+      "power_rain": "NASA POWER monthly API, community AG, PRECTOTCORR",
+      "pisco_rain": "SENAMHI PISCOp v2.1 stable monthly, via IRI/LDEO Climate Data Library"
     },
     "caveats": [
       "PISCO is a station-interpolated grid, not a direct station record.",
-      "2 m air temperature is warmer than ground surface; frost below 2 C at 2 m is a proxy."
+      "2 m air temperature is warmer than ground surface; frost below 2 C at 2 m is a proxy.",
+      "The precipitation factor corrects the monthly climatology only; single years agree only moderately between POWER and PISCO."
     ],
     "monthly": [
       {
@@ -29,7 +32,10 @@
         "pct_days_below_0": 0.0,
         "pct_days_below_2": 0.25,
         "pct_years_frost_0": 0.0,
-        "pct_years_frost_2": 3.8
+        "pct_years_frost_2": 3.8,
+        "lluvia_pisco_mm": 81.2,
+        "lluvia_power_mm": 62.7,
+        "lluvia_factor": 1.295
       },
       {
         "month": 2,
@@ -44,7 +50,10 @@
         "pct_days_below_0": 0.0,
         "pct_days_below_2": 0.0,
         "pct_years_frost_0": 0.0,
-        "pct_years_frost_2": 0.0
+        "pct_years_frost_2": 0.0,
+        "lluvia_pisco_mm": 91.6,
+        "lluvia_power_mm": 67.2,
+        "lluvia_factor": 1.362
       },
       {
         "month": 3,
@@ -59,7 +68,10 @@
         "pct_days_below_0": 0.0,
         "pct_days_below_2": 0.0,
         "pct_years_frost_0": 0.0,
-        "pct_years_frost_2": 0.0
+        "pct_years_frost_2": 0.0,
+        "lluvia_pisco_mm": 138.7,
+        "lluvia_power_mm": 84.7,
+        "lluvia_factor": 1.637
       },
       {
         "month": 4,
@@ -74,7 +86,10 @@
         "pct_days_below_0": 0.0,
         "pct_days_below_2": 0.0,
         "pct_years_frost_0": 0.0,
-        "pct_years_frost_2": 0.0
+        "pct_years_frost_2": 0.0,
+        "lluvia_pisco_mm": 52.8,
+        "lluvia_power_mm": 57.3,
+        "lluvia_factor": 0.921
       },
       {
         "month": 5,
@@ -89,7 +104,10 @@
         "pct_days_below_0": 0.12,
         "pct_days_below_2": 1.24,
         "pct_years_frost_0": 3.8,
-        "pct_years_frost_2": 11.5
+        "pct_years_frost_2": 11.5,
+        "lluvia_pisco_mm": 15.6,
+        "lluvia_power_mm": 21.1,
+        "lluvia_factor": 0.739
       },
       {
         "month": 6,
@@ -104,7 +122,10 @@
         "pct_days_below_0": 0.0,
         "pct_days_below_2": 0.38,
         "pct_years_frost_0": 0.0,
-        "pct_years_frost_2": 3.8
+        "pct_years_frost_2": 3.8,
+        "lluvia_pisco_mm": 3.4,
+        "lluvia_power_mm": 6.9,
+        "lluvia_factor": 0.494
       },
       {
         "month": 7,
@@ -119,7 +140,10 @@
         "pct_days_below_0": 0.25,
         "pct_days_below_2": 6.33,
         "pct_years_frost_0": 7.7,
-        "pct_years_frost_2": 57.7
+        "pct_years_frost_2": 57.7,
+        "lluvia_pisco_mm": 1.5,
+        "lluvia_power_mm": 4.0,
+        "lluvia_factor": 0.388
       },
       {
         "month": 8,
@@ -134,7 +158,10 @@
         "pct_days_below_0": 0.37,
         "pct_days_below_2": 3.1,
         "pct_years_frost_0": 7.7,
-        "pct_years_frost_2": 42.3
+        "pct_years_frost_2": 42.3,
+        "lluvia_pisco_mm": 2.5,
+        "lluvia_power_mm": 3.9,
+        "lluvia_factor": 0.641
       },
       {
         "month": 9,
@@ -149,7 +176,10 @@
         "pct_days_below_0": 0.0,
         "pct_days_below_2": 0.0,
         "pct_years_frost_0": 0.0,
-        "pct_years_frost_2": 0.0
+        "pct_years_frost_2": 0.0,
+        "lluvia_pisco_mm": 18.7,
+        "lluvia_power_mm": 18.0,
+        "lluvia_factor": 1.036
       },
       {
         "month": 10,
@@ -164,7 +194,10 @@
         "pct_days_below_0": 0.0,
         "pct_days_below_2": 0.62,
         "pct_years_frost_0": 0.0,
-        "pct_years_frost_2": 7.7
+        "pct_years_frost_2": 7.7,
+        "lluvia_pisco_mm": 55.7,
+        "lluvia_power_mm": 42.3,
+        "lluvia_factor": 1.317
       },
       {
         "month": 11,
@@ -179,7 +212,10 @@
         "pct_days_below_0": 1.67,
         "pct_days_below_2": 5.51,
         "pct_years_frost_0": 11.5,
-        "pct_years_frost_2": 30.8
+        "pct_years_frost_2": 30.8,
+        "lluvia_pisco_mm": 38.8,
+        "lluvia_power_mm": 46.9,
+        "lluvia_factor": 0.828
       },
       {
         "month": 12,
@@ -194,7 +230,10 @@
         "pct_days_below_0": 0.0,
         "pct_days_below_2": 1.49,
         "pct_years_frost_0": 0.0,
-        "pct_years_frost_2": 19.2
+        "pct_years_frost_2": 19.2,
+        "lluvia_pisco_mm": 55.4,
+        "lluvia_power_mm": 48.9,
+        "lluvia_factor": 1.132
       }
     ]
   }

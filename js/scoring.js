@@ -7,7 +7,7 @@
  *   { mes, tmed, tmin_abs, lluvia_mm, lluvia_cv, prob_helada }
  *   tmed        mean air temperature (C), bias-corrected when available
  *   tmin_abs    mean of the monthly absolute minimum (C)
- *   lluvia_mm   mean monthly precipitation (mm/month)
+ *   lluvia_mm   mean monthly precipitation (mm/month), times lluvia_factor when available
  *   lluvia_cv   inter-annual coefficient of variation of precipitation
  *   prob_helada fraction (0-1) of years with at least one day below the frost threshold
  *
