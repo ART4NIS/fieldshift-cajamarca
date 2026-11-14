@@ -97,6 +97,8 @@ export function evaluarCultivo(climaPorMes, cultivo, mesSiembra) {
   return {
     id: cultivo.id,
     nombre: cultivo.nombre,
+    temp_dano_helada: cultivo.temp_dano_helada,
+    heladas: mesesHelada.map((m) => ({ mes: m, prob: climaPorMes[m].prob_helada })),
     mes_siembra: mesSiembra,
     meses,
     puntaje: mean(porMes.map((x) => x.puntaje)),
@@ -188,13 +190,53 @@ export function nivelConfianza(contexto = {}) {
 export const AVISO_SIN_CORRECCION =
   "Temperaturas sin corrección local: NASA POWER suele subestimar las heladas en la sierra.";
 
+// Same for every rotation, so the UI shows it once in the "before sowing" box.
+export const AVISO_DATOS_ESTIMADOS =
+  "Los datos de los cultivos son estimaciones de literatura y deben validarse con un agrónomo local.";
+
+// Farmer-facing frost frequency: a word plus a fixed, rounded "1 in N years" per band.
+// Natural frequencies are easier to read than percentages; the exact % goes to the technical detail.
+const ESCALA_HELADA = [
+  { min: 0.9, texto: "todos los años" },
+  { min: 0.5, texto: "la mayoría de los años" },
+  { min: 0.25, texto: "frecuente (1 de cada 3 años)" },
+  { min: 0.1, texto: "algunos años (1 de cada 5)" },
+  { min: 0, texto: "rara (menos de 1 año de cada 10)" },
+];
+
+/** Plain-language frost frequency for a probability 0-1. */
+export function frecuenciaHelada(prob) {
+  return ESCALA_HELADA.find((e) => prob >= e.min)?.texto ?? ESCALA_HELADA.at(-1).texto;
+}
+
+/** Plain-language cold tolerance from the crop damage temperature (C). */
+export function toleranciaFrio(tempDanoHelada) {
+  if (tempDanoHelada >= -1) return "Es muy sensible al frío.";
+  if (tempDanoHelada >= -3) return "Aguanta heladas suaves.";
+  return "Aguanta bien las heladas.";
+}
+
+const unirEs = (xs) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} y ${xs.at(-1)}`);
+
+/** "Papa: en julio y agosto, helada la mayoría de los años; en noviembre, helada frecuente (...). Es muy sensible al frío." */
+export function avisoHeladaCultivo(nombre, heladas, tempDanoHelada) {
+  const grupos = new Map();
+  for (const { mes, prob } of heladas) {
+    const texto = frecuenciaHelada(prob);
+    grupos.set(texto, [...(grupos.get(texto) ?? []), MESES[mes - 1]]);
+  }
+  const partes = [...grupos].map(([texto, meses]) => `en ${unirEs(meses)}, helada ${texto}`);
+  return `${nombre}: ${partes.join("; ")}. ${toleranciaFrio(tempDanoHelada)}`;
+}
+
 function avisosRotacion(evaluacion, contexto) {
   const avisos = [];
+  const vistos = new Set();
   for (const c of evaluacion.cultivos) {
-    if (c.meses_helada.length) {
-      const nombres = c.meses_helada.map((m) => MESES[m - 1]).join(", ");
-      avisos.push(`${c.nombre}: riesgo de helada en ${nombres}. Revise la fecha de siembra con un técnico local.`);
-    }
+    // A crop repeated in the rotation would produce the same warning twice.
+    if (!c.heladas.length || vistos.has(c.id)) continue;
+    vistos.add(c.id);
+    avisos.push(avisoHeladaCultivo(c.nombre, c.heladas, c.temp_dano_helada));
   }
   if (!contexto.corregido) {
     avisos.push(AVISO_SIN_CORRECCION);
@@ -203,7 +245,7 @@ function avisosRotacion(evaluacion, contexto) {
     avisos.push(`Pendiente del terreno no disponible: se usó un valor medio de ${PARAMS.pendientePorDefectoPct} %.`);
   }
   if (evaluacion.usa_estimados) {
-    avisos.push("Los datos de los cultivos son estimaciones de literatura y deben validarse con un agrónomo local.");
+    avisos.push(AVISO_DATOS_ESTIMADOS);
   }
   return avisos;
 }
