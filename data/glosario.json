@@ -1,0 +1,28 @@
+{
+  "terminos": [
+    {
+      "termino": "NDVI",
+      "definicion": "Indicador satelital de qué tan verde está la vegetación. En general, un valor más alto indica más vegetación verde."
+    },
+    {
+      "termino": "Evapotranspiración",
+      "definicion": "Agua que vuelve al aire al evaporarse del suelo y al salir de las plantas por sus hojas."
+    },
+    {
+      "termino": "Anomalía de humedad",
+      "definicion": "Indica si el suelo está más húmedo o más seco de lo habitual para ese lugar y esa época del año."
+    },
+    {
+      "termino": "Riesgo de helada",
+      "definicion": "Para un mes dado, muestra en qué porcentaje de los años analizados hubo al menos un día con una mínima del aire por debajo de 2 °C. La app usa ese umbral como señal de riesgo en el piloto de Cajamarca."
+    },
+    {
+      "termino": "Balance hídrico",
+      "definicion": "Diferencia entre el agua que aporta la lluvia y la que se pierde por evapotranspiración. Un valor negativo indica un déficit."
+    },
+    {
+      "termino": "Dato satelital vs. dato en campo",
+      "definicion": "El dato satelital representa un área. Una medición en campo describe un punto concreto, como una estación meteorológica."
+    }
+  ]
+}
