@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.DS_Store
+Thumbs.db
+# Raw AppEEARS / SRTM downloads (only processed JSON is committed)
+raw/
+*.tif
+*.nc

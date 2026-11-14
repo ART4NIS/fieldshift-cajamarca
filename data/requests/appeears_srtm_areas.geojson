@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": "cajamarca" },
+      "geometry": { "type": "Polygon", "coordinates": [[[-78.535, -7.185], [-78.485, -7.185], [-78.485, -7.135], [-78.535, -7.135], [-78.535, -7.185]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "huancayo" },
+      "geometry": { "type": "Polygon", "coordinates": [[[-75.235, -12.095], [-75.185, -12.095], [-75.185, -12.045], [-75.235, -12.045], [-75.235, -12.095]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "puno" },
+      "geometry": { "type": "Polygon", "coordinates": [[[-70.045, -15.865], [-69.995, -15.865], [-69.995, -15.815], [-70.045, -15.815], [-70.045, -15.865]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "cusco" },
+      "geometry": { "type": "Polygon", "coordinates": [[[-71.995, -13.545], [-71.945, -13.545], [-71.945, -13.495], [-71.995, -13.495], [-71.995, -13.545]]] }
+    }
+  ]
+}
