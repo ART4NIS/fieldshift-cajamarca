@@ -184,6 +184,10 @@ export function nivelConfianza(contexto = {}) {
   return "Bajo";
 }
 
+// Same for every rotation, so the UI shows it once as a banner instead of per card.
+export const AVISO_SIN_CORRECCION =
+  "Temperaturas sin corrección local: NASA POWER suele subestimar las heladas en la sierra.";
+
 function avisosRotacion(evaluacion, contexto) {
   const avisos = [];
   for (const c of evaluacion.cultivos) {
@@ -193,7 +197,7 @@ function avisosRotacion(evaluacion, contexto) {
     }
   }
   if (!contexto.corregido) {
-    avisos.push("Temperaturas sin corrección local: NASA POWER suele subestimar las heladas en la sierra.");
+    avisos.push(AVISO_SIN_CORRECCION);
   }
   if (contexto.pendiente_pct == null) {
     avisos.push(`Pendiente del terreno no disponible: se usó un valor medio de ${PARAMS.pendientePorDefectoPct} %.`);
