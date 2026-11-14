@@ -22,9 +22,13 @@
   <main>
     <section id="step-mapa" class="step">
       <h2>Elija su parcela</h2>
-      <p>Toque el mapa donde está su parcela o use un punto piloto.</p>
+      <p>Elija una zona y toque su parcela dentro del área verde.</p>
       <div id="pilots" class="chips"></div>
       <div id="map" role="application" aria-label="Mapa de la parcela"></div>
+      <p class="map-legend">
+        <span><span class="swatch swatch-ok" aria-hidden="true"></span> Con datos locales (SENAMHI)</span>
+        <span><span class="swatch swatch-off" aria-hidden="true"></span> Todavía sin datos</span>
+      </p>
       <p id="coords" aria-live="polite">Aún no eligió un punto.</p>
       <p id="map-msg" class="msg" aria-live="polite"></p>
       <button type="button" id="to-prioridades" class="primary" disabled>Continuar</button>

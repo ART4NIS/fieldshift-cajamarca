@@ -166,6 +166,26 @@ export function nearestPilot(lat, lon, pilots, maxKm = PILOT_SNAP_KM) {
   return best;
 }
 
+/**
+ * Closed ring of [lat, lon] points `radiusKm` around a center (spherical destination formula).
+ * Used to cut pilot-zone holes into the gray "no data" mask on the map.
+ */
+export function circleRing(lat, lon, radiusKm, n = 64) {
+  const rad = Math.PI / 180;
+  const d = radiusKm / 6371;
+  const lat1 = lat * rad;
+  const lon1 = lon * rad;
+  return Array.from({ length: n }, (_, i) => {
+    const brng = (2 * Math.PI * i) / n;
+    const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(brng));
+    const lon2 = lon1 + Math.atan2(
+      Math.sin(brng) * Math.sin(d) * Math.cos(lat1),
+      Math.cos(d) - Math.sin(lat1) * Math.sin(lat2),
+    );
+    return [lat2 / rad, lon2 / rad];
+  });
+}
+
 export function checkAltitude(elevationM, min = 2500) {
   if (!Number.isFinite(elevationM)) {
     return { ok: false, mensaje: "No pudimos confirmar la altitud de este punto." };
