@@ -7,6 +7,10 @@ const POWER_FILL = -999;
 export const FROST_THRESHOLD_C = 2;
 // A click this close to a pilot site uses that pilot's local corrections.
 export const PILOT_SNAP_KM = 10;
+// Clicks are accepted within this distance of a pilot (live PISCO correction beyond PILOT_SNAP_KM).
+export const SELECT_RADIUS_KM = 100;
+// A fallback to a pilot's correction keeps normal confidence only up to this distance.
+export const FALLBACK_TRUST_KM = 25;
 const DATA_BASE = new URL("../data/", import.meta.url);
 
 export function buildPowerUrl(lat, lon, start = 1991, end = 2024) {
@@ -107,10 +111,16 @@ export async function fetchElevation(lat, lon, { fetchImpl = globalThis.fetch } 
  * Elevation prefers Open-Meteo and falls back to the POWER grid cell.
  * Without a pilot (or a pilot without climate_bias) the climate is uncorrected.
  */
-export async function fetchClimate(lat, lon, { pilotId, fetchImpl = globalThis.fetch } = {}) {
-  let climateBias = null;
-  let periodoCorreccion = null;
-  if (pilotId) {
+export async function fetchClimate(
+  lat,
+  lon,
+  { pilotId, climateBias: givenBias = null, corregido: corregidoOverride, fuenteCorreccion, fetchImpl = globalThis.fetch } = {},
+) {
+  // `givenBias` (live PISCO result) wins over the pilot file; `corregidoOverride` lets the UI mark
+  // a far-away pilot fallback as not corrected (confidence "Bajo") while still applying its numbers.
+  let climateBias = givenBias;
+  let periodoCorreccion = givenBias?.period ?? null;
+  if (pilotId && !givenBias) {
     try {
       const pilot = await getJson(new URL(`pilots/${pilotId}.json`, DATA_BASE).href, fetchImpl);
       climateBias = pilot.climate_bias ?? null;
@@ -134,7 +144,7 @@ export async function fetchClimate(lat, lon, { pilotId, fetchImpl = globalThis.f
   }
 
   const power = body.properties?.parameter ?? body;
-  const corregido = Boolean(climateBias);
+  const corregido = corregidoOverride ?? Boolean(climateBias);
   const pointElevation = await elevationPromise;
   const cellElevation = body.geometry?.coordinates?.[2] ?? null;
   return {
@@ -143,7 +153,7 @@ export async function fetchClimate(lat, lon, { pilotId, fetchImpl = globalThis.f
     elevationSource: pointElevation !== null ? "Copernicus DEM 90 m (Open-Meteo)" : "NASA POWER (celda ~50 km)",
     corregido,
     periodoCorreccion,
-    fuente: corregido ? `${fuente}, corregido con datos locales (SENAMHI PISCO)` : fuente,
+    fuente: corregido ? `${fuente}, ${fuenteCorreccion ?? "corregido con datos locales (SENAMHI PISCO)"}` : fuente,
   };
 }
 
@@ -197,4 +207,40 @@ export function checkAltitude(elevationM, min = 2500) {
     };
   }
   return { ok: true, mensaje: `Altitud: ${Math.round(elevationM)} m.` };
+}
+
+/** Ray casting: is [lon, lat] inside a GeoJSON polygon (array of rings, first ring = outer, others = holes)? */
+export function pointInPolygon(lon, lat, rings) {
+  const inRing = (ring) => {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i];
+      const [xj, yj] = ring[j];
+      if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  };
+  if (!rings?.length || !inRing(rings[0])) return false;
+  return !rings.slice(1).some(inRing);
+}
+
+/** True when the point falls inside any polygon of a water-mask FeatureCollection (null mask -> false). */
+export function isOnWater(lat, lon, mask) {
+  return (mask?.features ?? []).some((f) => {
+    const g = f.geometry;
+    if (g?.type === "Polygon") return pointInPolygon(lon, lat, g.coordinates);
+    if (g?.type === "MultiPolygon") return g.coordinates.some((poly) => pointInPolygon(lon, lat, poly));
+    return false;
+  });
+}
+
+/** Fallback when the live computation fails: trust the pilot's numbers only if it is close. */
+export function fallbackAssessment(km, pilotName) {
+  const near = km <= FALLBACK_TRUST_KM;
+  return {
+    corregido: near,
+    aviso: near
+      ? null
+      : `No pudimos calcular la corrección local para este punto; usamos la de ${pilotName}, a ${Math.round(km)} km. Tómelo como referencia.`,
+  };
 }
