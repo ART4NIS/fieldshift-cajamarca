@@ -10,6 +10,8 @@ import {
   fetchClimate,
   fetchElevation,
   nearestPilot,
+  circleRing,
+  PILOT_SNAP_KM,
   distanceKm,
 } from "../js/api.js";
 
@@ -174,4 +176,15 @@ test("live POWER reproduces the cajamarca fixture", { skip: !process.env.POWER_L
       assert.ok(Math.abs(res.clima[i][key] - row[key]) <= 0.05, `month ${row.mes} ${key}`);
     }
   }
+});
+
+test("circleRing draws the pilot zone at the snap radius", () => {
+  const ring = circleRing(-7.16, -78.51, PILOT_SNAP_KM);
+  assert.equal(ring.length, 64);
+  for (const [lat, lon] of ring) {
+    assert.ok(Math.abs(distanceKm(-7.16, -78.51, lat, lon) - PILOT_SNAP_KM) < 0.01);
+  }
+  // A point on the drawn edge is still accepted by nearestPilot (zone and snap rule agree).
+  const [lat, lon] = ring[10];
+  assert.equal(nearestPilot(lat, lon, [{ id: "cajamarca", lat: -7.16, lon: -78.51 }], PILOT_SNAP_KM + 0.01)?.id, "cajamarca");
 });

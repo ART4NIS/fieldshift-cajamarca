@@ -1,5 +1,5 @@
 // Thin UI wiring: DOM events -> pure modules (api.js, scoring.js) -> render.
-import { fetchClimate, checkAltitude, nearestPilot } from "./api.js";
+import { fetchClimate, checkAltitude, nearestPilot, circleRing, PILOT_SNAP_KM } from "./api.js";
 import {
   evaluarRotaciones,
   calendarioRiesgos,
@@ -18,7 +18,9 @@ import { renderEvidence } from "./evidence.js";
 
 const LAT_MAX = -6;
 const LAT_MIN = -16;
-const FALLBACK_PILOTS = [{ id: "cajamarca", nombre: "Cajamarca", lat: -7.16, lon: -78.51 }];
+// Zoom at which a 10 km pilot zone fills most of a phone-width map.
+const ZONE_ZOOM = 10;
+const FALLBACK_PILOTS =[{ id: "cajamarca", nombre: "Cajamarca", lat: -7.16, lon: -78.51 }];
 
 const SLIDER_LABELS = {
   agua: ["Ahorrar agua", "Cultivos que necesitan menos lluvia o riego"],
@@ -80,10 +82,14 @@ function selectPoint(lat, lon, pilotId = null) {
     state.parcela = null;
     return;
   }
-  $("map-msg").textContent = "";
-  // A click near a pilot site uses that pilot's local corrections (SENAMHI PISCO).
+  // Only the green pilot zones have local corrections (SENAMHI PISCO); the gray area is not selectable.
   const near = pilotId ? null : nearestPilot(lat, lon, state.pilots);
   const usedPilot = pilotId ?? near?.id ?? null;
+  if (!usedPilot) {
+    $("map-msg").textContent = "Todavía no tenemos datos locales para esta zona. Elija un punto dentro de las zonas verdes.";
+    return;
+  }
+  $("map-msg").textContent = "";
   state.parcela = { lat, lon, pilotId: usedPilot };
   state.clima = null;
   if (marker) marker.setLatLng([lat, lon]);
@@ -102,18 +108,66 @@ async function initMap() {
   }).addTo(map);
   map.on("click", (e) => selectPoint(e.latlng.lat, e.latlng.lng));
 
-  const pilots = await loadPilots();
+  const pilots = (await loadPilots()).filter((p) => p.disponible !== false);
   state.pilots = pilots;
+  drawPilotZones(pilots);
   for (const p of pilots) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.textContent = p.nombre ?? p.id;
     btn.addEventListener("click", () => {
-      map.setView([p.lat, p.lon], 10);
+      map.setView([p.lat, p.lon], ZONE_ZOOM);
       selectPoint(p.lat, p.lon, p.id);
     });
     $("pilots").append(btn);
   }
+}
+
+/** Green circles where local data exists; gray mask (with holes) everywhere else. */
+function drawPilotZones(pilots) {
+  const rings = pilots.map((p) => circleRing(p.lat, p.lon, PILOT_SNAP_KM));
+  const world = [[-89, -179], [-89, 179], [89, 179], [89, -179]];
+  L.polygon([world, ...rings], {
+    stroke: false,
+    fillColor: "#6b6b6b",
+    fillOpacity: 0.45,
+    interactive: false,
+  }).addTo(map);
+  for (const ring of rings) {
+    L.polygon(ring, {
+      color: "#2f6b3f",
+      weight: 2,
+      fillColor: "#3f9a55",
+      fillOpacity: 0.15,
+      interactive: false,
+    }).addTo(map);
+  }
+  // At country zoom a 10 km circle is a few pixels wide: show a fixed-size dot that zooms into the zone.
+  const dots = pilots.map((p) =>
+    L.circleMarker([p.lat, p.lon], {
+      radius: 9,
+      color: "#ffffff",
+      weight: 2,
+      fillColor: "#2f6b3f",
+      fillOpacity: 1,
+    })
+      .bindTooltip(p.nombre ?? p.id, { direction: "top" })
+      .on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        map.setView([p.lat, p.lon], ZONE_ZOOM);
+      }),
+  );
+  const toggleDots = () => {
+    const show = map.getZoom() < ZONE_ZOOM - 1;
+    for (const dot of dots) {
+      if (show) dot.addTo(map);
+      else dot.remove();
+    }
+  };
+  map.on("zoomend", toggleDots);
+  const bounds = L.latLngBounds(rings.flat());
+  if (bounds.isValid()) map.fitBounds(bounds, { padding: [12, 12] });
+  toggleDots();
 }
 
 // ---- climate + scoring -------------------------------------------------
