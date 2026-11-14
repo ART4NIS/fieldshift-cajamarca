@@ -33,6 +33,10 @@ python scripts/build_climate_fixture.py --pilot cajamarca   # entrada mensual de
 npm test                                                    # tests del motor de reglas
 ```
 
+## Fichas de evidencia
+
+Cada resultado incluye una ficha con beneficios posibles, fuentes agronómicas, límites y preguntas para el técnico local. Contenido en `data/fichas.json`; alcance de la investigación y mantenimiento en [docs/FICHAS_EVIDENCIA.md](docs/FICHAS_EVIDENCIA.md). Los parámetros del motor siguen siendo estimaciones del equipo.
+
 ## Equipo
 
 Plan de trabajo y tareas por persona: [docs/TAREAS.md](docs/TAREAS.md)
