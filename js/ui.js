@@ -1,5 +1,15 @@
 // Thin UI wiring: DOM events -> pure modules (api.js, scoring.js) -> render.
-import { fetchClimate, checkAltitude, nearestPilot, circleRing, PILOT_SNAP_KM } from "./api.js";
+import {
+  fetchClimate,
+  checkAltitude,
+  nearestPilot,
+  circleRing,
+  isOnWater,
+  fallbackAssessment,
+  PILOT_SNAP_KM,
+  SELECT_RADIUS_KM,
+} from "./api.js";
+import { getLocalBias, LIVE_TIMEOUT_MS } from "./pisco.js";
 import {
   evaluarRotaciones,
   calendarioRiesgos,
@@ -18,8 +28,8 @@ import { renderEvidence } from "./evidence.js";
 
 const LAT_MAX = -6;
 const LAT_MIN = -16;
-// Zoom at which a 10 km pilot zone fills most of a phone-width map.
-const ZONE_ZOOM = 10;
+// Zoom at which a 100 km pilot zone fills most of a phone-width map.
+const ZONE_ZOOM = 8;
 const FALLBACK_PILOTS =[{ id: "cajamarca", nombre: "Cajamarca", lat: -7.16, lon: -78.51 }];
 
 const SLIDER_LABELS = {
@@ -32,7 +42,10 @@ const SLIDER_LABELS = {
 
 const $ = (id) => document.getElementById(id);
 const state = {
-  parcela: null, // { lat, lon, pilotId }
+  parcela: null, // { lat, lon, pilotId, km, mode: "pilot" | "live" | "fallback" }
+  aviso: null,
+  loading: null,
+  water: null,
   clima: null,
   corregido: false,
   fuente: "No informada",
@@ -75,28 +88,46 @@ async function loadPilots() {
   }
 }
 
+function coordsText() {
+  const { lat, lon, pilotId, km, mode } = state.parcela;
+  const name = state.pilots.find((p) => p.id === pilotId)?.nombre ?? pilotId;
+  const base = `Latitud ${lat.toFixed(4)}, longitud ${lon.toFixed(4)}. `;
+  if (mode === "pilot") return `${base}Se usan los datos locales del punto piloto ${name}.`;
+  if (mode === "fallback") return `${base}Se usa la corrección del punto piloto ${name}, a ${Math.round(km)} km.`;
+  return `${base}Se usará una corrección local calculada para este punto.`;
+}
+
 function selectPoint(lat, lon, pilotId = null) {
+  if (state.loading) {
+    $("map-msg").textContent = "Espere un momento: todavía estamos calculando el clima del punto anterior.";
+    return;
+  }
   if (lat > LAT_MAX || lat < LAT_MIN) {
     $("map-msg").textContent = "Este punto está fuera de la zona andina del Perú que cubre la herramienta (latitud entre -6 y -16).";
     $("to-prioridades").disabled = true;
     state.parcela = null;
     return;
   }
-  // Only the green pilot zones have local corrections (SENAMHI PISCO); the gray area is not selectable.
-  const near = pilotId ? null : nearestPilot(lat, lon, state.pilots);
-  const usedPilot = pilotId ?? near?.id ?? null;
-  if (!usedPilot) {
-    $("map-msg").textContent = "Todavía no tenemos datos locales para esta zona. Elija un punto dentro de las zonas verdes.";
+  if (isOnWater(lat, lon, state.water)) {
+    $("map-msg").textContent = "Ese punto está sobre un lago. Toque un punto en tierra firme.";
     return;
   }
+  // Selectable area: 100 km around each pilot. Within 10 km the pilot's own correction is used;
+  // farther out the correction is computed live for the exact point (see ensureClimate).
+  const near = nearestPilot(lat, lon, state.pilots, SELECT_RADIUS_KM);
+  if (!near && !pilotId) {
+    $("map-msg").textContent = "Todavía no tenemos datos para esta zona. Elija un punto dentro del área verde.";
+    return;
+  }
+  const chosen = pilotId ? state.pilots.find((p) => p.id === pilotId) : near;
+  const km = pilotId ? 0 : near.km;
   $("map-msg").textContent = "";
-  state.parcela = { lat, lon, pilotId: usedPilot };
+  state.parcela = { lat, lon, pilotId: chosen.id, km, mode: km <= PILOT_SNAP_KM ? "pilot" : "live" };
   state.clima = null;
+  state.aviso = null;
   if (marker) marker.setLatLng([lat, lon]);
   else marker = L.marker([lat, lon]).addTo(map);
-  const pilotName = state.pilots.find((p) => p.id === usedPilot)?.nombre ?? usedPilot;
-  $("coords").textContent = `Latitud ${lat.toFixed(4)}, longitud ${lon.toFixed(4)}` +
-    (usedPilot ? `. Se usan los datos locales del punto piloto ${pilotName}.` : "");
+  $("coords").textContent = coordsText();
   $("to-prioridades").disabled = false;
 }
 
@@ -107,6 +138,11 @@ async function initMap() {
     attribution: "&copy; OpenStreetMap",
   }).addTo(map);
   map.on("click", (e) => selectPoint(e.latlng.lat, e.latlng.lng));
+  try {
+    state.water = await loadJson("data/water_mask.geojson");
+  } catch {
+    state.water = null; // without the mask, lake clicks are simply not rejected
+  }
 
   const pilots = (await loadPilots()).filter((p) => p.disponible !== false);
   state.pilots = pilots;
@@ -123,9 +159,9 @@ async function initMap() {
   }
 }
 
-/** Green circles where local data exists; gray mask (with holes) everywhere else. */
+/** Green circles (100 km) where a local correction is available; gray mask (with holes) elsewhere. */
 function drawPilotZones(pilots) {
-  const rings = pilots.map((p) => circleRing(p.lat, p.lon, PILOT_SNAP_KM));
+  const rings = pilots.map((p) => circleRing(p.lat, p.lon, SELECT_RADIUS_KM));
   const world = [[-89, -179], [-89, 179], [89, 179], [89, -179]];
   L.polygon([world, ...rings], {
     stroke: false,
@@ -142,7 +178,7 @@ function drawPilotZones(pilots) {
       interactive: false,
     }).addTo(map);
   }
-  // At country zoom a 10 km circle is a few pixels wide: show a fixed-size dot that zooms into the zone.
+  // At country zoom a 100 km circle is a few pixels wide: show a fixed-size dot that zooms into the zone.
   const dots = pilots.map((p) =>
     L.circleMarker([p.lat, p.lon], {
       radius: 9,
@@ -171,21 +207,56 @@ function drawPilotZones(pilots) {
 }
 
 // ---- climate + scoring -------------------------------------------------
-async function ensureClimate() {
-  if (state.clima) return true;
-  $("status").textContent = "Cargando el clima de su parcela...";
+function setBusy(busy) {
+  for (const id of ["to-prioridades", "to-resultados"]) $(id).disabled = busy;
+}
+
+/** Climate for the chosen point; one request at a time (concurrent callers share the same promise). */
+function ensureClimate() {
+  if (state.clima) return Promise.resolve(true);
+  if (!state.loading) {
+    setBusy(true);
+    state.loading = loadClimate().finally(() => {
+      state.loading = null;
+      setBusy(false);
+      if (!state.parcela) $("to-prioridades").disabled = true;
+    });
+  }
+  return state.loading;
+}
+
+async function loadClimate() {
+  const p = state.parcela;
+  const pilotName = state.pilots.find((x) => x.id === p.pilotId)?.nombre ?? p.pilotId;
+  let options = { pilotId: p.pilotId };
+  state.aviso = null;
+  if (p.mode === "live") {
+    $("status").textContent = "Calculando la corrección local para su punto (puede tardar hasta un minuto la primera vez)...";
+    try {
+      const { bias } = await getLocalBias(p.lat, p.lon, { timeoutMs: LIVE_TIMEOUT_MS });
+      options = { climateBias: bias, fuenteCorreccion: "con corrección local calculada para este punto (SENAMHI PISCO)" };
+    } catch {
+      const fa = fallbackAssessment(p.km, pilotName);
+      p.mode = "fallback";
+      state.aviso = fa.aviso;
+      options = { pilotId: p.pilotId, corregido: fa.corregido };
+      $("coords").textContent = coordsText();
+    }
+  } else {
+    $("status").textContent = "Cargando el clima de su parcela...";
+  }
   try {
-    const { lat, lon, pilotId } = state.parcela;
-    const res = await fetchClimate(lat, lon, { pilotId });
+    const res = await fetchClimate(p.lat, p.lon, options);
     state.clima = res.clima;
     state.corregido = res.corregido;
     state.fuente = res.fuente;
     state.periodoCorreccion = res.periodoCorreccion;
     const alt = checkAltitude(res.elevation);
-    $("status").textContent = alt.ok ? "" : `${alt.mensaje} (Fuente: ${res.elevationSource})`;
+    const status = alt.ok ? "" : `${alt.mensaje} (Fuente: ${res.elevationSource})`;
+    $("status").textContent = [state.aviso, status].filter(Boolean).join(" ");
     return true;
   } catch {
-    $("status").textContent = "No pudimos obtener el clima de este punto. Intente de nuevo o elija un punto piloto.";
+    $("status").textContent = "No pudimos obtener el clima de este punto. Intente de nuevo o elija otro punto.";
     return false;
   }
 }
@@ -209,9 +280,14 @@ function renderResults() {
   const shared = results.length
     ? results[0].avisos.filter((a) => !isCropWarning(a) && results.every((r) => r.avisos.includes(a)))
     : [];
-  $("frost-banner").hidden = state.corregido;
+  // The banner is for climate with no local correction at all. A distant pilot correction (fallback)
+  // is still a correction: its own warning with the distance goes in the "before sowing" box instead.
+  $("frost-banner").hidden = state.corregido || state.parcela?.mode === "fallback";
   $("estimated-note").hidden = !shared.includes(AVISO_DATOS_ESTIMADOS);
-  const notes = shared.filter((a) => a !== AVISO_SIN_CORRECCION && a !== AVISO_DATOS_ESTIMADOS);
+  const notes = [
+    ...(state.aviso ? [state.aviso] : []),
+    ...shared.filter((a) => a !== AVISO_SIN_CORRECCION && a !== AVISO_DATOS_ESTIMADOS),
+  ];
   $("common-notes").replaceChildren(...notes.map((a) => Object.assign(document.createElement("li"), { textContent: a })));
   $("before-sowing").hidden = false;
   box.replaceChildren(
