@@ -19,6 +19,7 @@ Si después de una actualización la página no carga, recárguela sin caché (C
 | Corrección local de temperatura y lluvia | SENAMHI PISCOt v1.1 y PISCOp v2.1, vía IRI/LDEO Climate Data Library | Corrige el sesgo de POWER, que subestima las heladas en la sierra |
 | Altitud y pendiente | Copernicus DEM 90 m, vía la API de elevación de Open-Meteo | Verifica que el punto esté sobre 2 500 m y calcula la pendiente del punto |
 | Lagos | OpenStreetMap (ODbL) | Impide marcar el Titicaca o Junín como parcela |
+| Búsqueda de lugares | OpenStreetMap Nominatim | Ubica un pueblo o distrito por su nombre (1 búsqueda por segundo, sin autocompletar) |
 
 NASA POWER es el único dataset NASA activo en la versión actual. La altitud y la pendiente vienen de Copernicus, no de SRTM.
 
@@ -83,6 +84,7 @@ Sí. Usamos un asistente de programación con IA (Claude Code, de Anthropic) par
 - Open-Meteo Elevation API — https://open-meteo.com/en/docs/elevation-api
 - Copernicus DEM GLO-90 — https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model
 - OpenStreetMap — https://www.openstreetmap.org/copyright
+- Nominatim (política de uso) — https://operations.osmfoundation.org/policies/nominatim/
 - NASA AppEEARS — https://appeears.earthdatacloud.nasa.gov/
 
 ## Equipo
