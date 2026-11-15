@@ -106,6 +106,43 @@ export async function fetchElevation(lat, lon, { fetchImpl = globalThis.fetch } 
 }
 
 /**
+ * Terrain slope in percent from a 3x3 elevation stencil (Horn's method).
+ * `z` = 9 elevations row-major, north to south then west to east; `spacingM` = cell size in meters.
+ */
+export function slopeFromStencil(z, spacingM) {
+  const [a, b, c, d, , f, g, h, i] = z;
+  const dzdx = (c + 2 * f + i - (a + 2 * d + g)) / (8 * spacingM);
+  const dzdy = (g + 2 * h + i - (a + 2 * b + c)) / (8 * spacingM); // south minus north
+  return Math.hypot(dzdx, dzdy) * 100;
+}
+
+/**
+ * Slope at a point from ONE Open-Meteo request (3x3 stencil, Copernicus DEM 90 m).
+ * Returns { pendiente_pct, fuente } or null on any failure.
+ */
+export async function fetchSlope(lat, lon, { fetchImpl = globalThis.fetch, spacingM = 90 } = {}) {
+  try {
+    const dLat = spacingM / 111320;
+    const dLon = spacingM / (111320 * Math.cos((lat * Math.PI) / 180));
+    const lats = [];
+    const lons = [];
+    for (const r of [-1, 0, 1]) {
+      for (const c of [-1, 0, 1]) {
+        lats.push(round(lat - r * dLat, 6)); // r = -1 is the north row
+        lons.push(round(lon + c * dLon, 6));
+      }
+    }
+    const url = `${ELEVATION_URL}?${new URLSearchParams({ latitude: lats.join(","), longitude: lons.join(",") })}`;
+    const body = await getJson(url, fetchImpl);
+    const z = body?.elevation;
+    if (!Array.isArray(z) || z.length !== 9 || !z.every(Number.isFinite)) return null;
+    return { pendiente_pct: slopeFromStencil(z, spacingM), fuente: "Copernicus DEM 90 m (Open-Meteo)" };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fetch POWER (cache fallback) and return
  * { clima, elevation, elevationSource, corregido, fuente }.
  * Elevation prefers Open-Meteo and falls back to the POWER grid cell.
@@ -232,6 +269,18 @@ export function isOnWater(lat, lon, mask) {
     if (g?.type === "MultiPolygon") return g.coordinates.some((poly) => pointInPolygon(lon, lat, poly));
     return false;
   });
+}
+
+/** Polygon list of a Polygon/MultiPolygon geometry (each polygon = array of rings). */
+function polygonsOf(g) {
+  if (g?.type === "Polygon") return [g.coordinates];
+  if (g?.type === "MultiPolygon") return g.coordinates;
+  return [];
+}
+
+/** True when the point lies inside the selectable-area FeatureCollection (holes respected; null -> false). */
+export function inSelectableArea(lat, lon, area) {
+  return (area?.features ?? []).some((f) => polygonsOf(f.geometry).some((poly) => pointInPolygon(lon, lat, poly)));
 }
 
 /** Fallback when the live computation fails: trust the pilot's numbers only if it is close. */
