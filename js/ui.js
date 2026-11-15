@@ -68,7 +68,8 @@ const state = {
   selected: null, // id of the rotation shown in the detail column
   glosario: [],
   glosarioFiltro: { texto: "", categoria: null },
-  pesos: Object.fromEntries(CRITERIOS.map((c) => [c, 3])),
+  // All 0 by default: the farmer raises what matters; all 0 means every criterion counts equally.
+  pesos: Object.fromEntries(CRITERIOS.map((c) => [c, 0])),
   cultivos: [],
   rotaciones: [],
   pilots: [],
@@ -95,6 +96,20 @@ function showStep(name) {
   window.scrollTo(0, 0);
   if (name === "inicio") map?.invalidateSize();
   if (name === "resultados") renderResults();
+}
+
+/** Home shows one step at a time: "place" (choose the plot) or "priorities" (weights and results button). */
+function setStage(stage) {
+  const home = $("step-inicio");
+  if (home.dataset.stage === stage) return;
+  home.dataset.stage = stage;
+  if (stage === "priorities") {
+    $("place-summary").textContent = coordsText();
+    $("priorities-title").focus({ preventScroll: true });
+  }
+  window.scrollTo(0, 0);
+  $("step-inicio").querySelector(".panel").scrollTop = 0;
+  map?.invalidateSize(); // on phones the map is hidden in step 2
 }
 
 // ---- map ---------------------------------------------------------------
@@ -135,13 +150,15 @@ function coordsText() {
 }
 
 function selectPoint(lat, lon, pilotId = null) {
+  // A new point (map click in step 2 on wide screens) goes back to step 1, where its messages are shown.
+  setStage("place");
   if (state.loading) {
     $("map-msg").textContent = "Espere un momento: todavía estamos calculando el clima del punto anterior.";
     return;
   }
   if (lat > LAT_MAX || lat < LAT_MIN) {
     $("map-msg").textContent = "Este punto está fuera de la zona andina del Perú que cubre la herramienta (latitud entre -6 y -16).";
-    $("to-resultados").disabled = true;
+    $("to-prioridades").disabled = true;
     $("cta-hint").hidden = false;
     state.parcela = null;
     return;
@@ -179,7 +196,7 @@ function selectPoint(lat, lon, pilotId = null) {
   $("coords").textContent = coordsText();
   $("coords").classList.add("is-set");
   setStatus("");
-  $("to-resultados").disabled = false;
+  $("to-prioridades").disabled = false;
   $("cta-hint").hidden = true;
 }
 
@@ -843,6 +860,8 @@ async function main() {
     b.addEventListener("click", () => showStep(b.dataset.go)));
   // Climate is fetched only here, so the farmer can still move the point freely before asking for results.
   $("to-resultados").addEventListener("click", generateResults);
+  $("to-prioridades").addEventListener("click", () => { if (state.parcela) setStage("priorities"); });
+  $("back-to-place").addEventListener("click", () => setStage("place"));
   $("export-all").addEventListener("click", () => {
     const { fichas, shared } = buildFichas();
     downloadPdf(fichas, shared);

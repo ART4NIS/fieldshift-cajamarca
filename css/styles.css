@@ -416,7 +416,8 @@ p { margin: 0 0 8px; }
 
 /* ---- home layout ------------------------------------------------------------------ */
 /* Phone: the panel dissolves so place, map and priorities stack in that order. */
-.split { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "place" "map" "priorities"; padding: 0 16px 28px; }
+.split { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "place" "map" "next" "priorities"; padding: 0 16px 28px; }
+.split-next { grid-area: next; }
 .panel { display: contents; }
 .split-place { grid-area: place; padding: 16px 0 12px; }
 .split-map { grid-area: map; margin: 0 -16px; }
@@ -435,6 +436,17 @@ p { margin: 0 0 8px; }
 }
 .coords.is-set { border-color: var(--accent); color: var(--fg); }
 .cta-hint { margin: 8px 0 0; text-align: center; font-size: 0.85rem; }
+#to-prioridades { margin-top: 16px; }
+.btn-back { margin: 0 0 10px -6px; padding-left: 6px; padding-right: 10px; }
+#place-summary { margin: 0 0 16px; }
+
+/* One step at a time: step 1 (place) or step 2 (priorities). On phones step 2 also hides the map. */
+.split[data-stage="place"] .split-priorities,
+.split[data-stage="priorities"] .split-place,
+.split[data-stage="priorities"] .split-next { display: none; }
+@media (max-width: 899px) {
+  .split[data-stage="priorities"] .split-map { display: none; }
+}
 
 @media (min-width: 900px) {
   /* Wide screens: the map fills the window under the top bar; the panel floats on the right. */
@@ -461,10 +473,14 @@ p { margin: 0 0 8px; }
     position: absolute;
     top: 14px;
     right: 14px;
-    bottom: 14px;
+    /* Height follows the content; it only scrolls when a step is taller than the window. */
+    max-height: calc(100% - 28px);
     z-index: 600;
     width: 410px;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
     padding: 18px 18px 14px;
     background: var(--glass);
     backdrop-filter: blur(10px);
@@ -473,8 +489,8 @@ p { margin: 0 0 8px; }
     box-shadow: var(--shadow);
     animation: rise 0.6s var(--ease) both;
   }
-  .split-place { padding: 0 0 16px; }
-  .split-priorities { border-top: 1px solid var(--line); padding-top: 16px; }
+  .split-place { padding: 0; }
+  .split-priorities { padding: 0; }
   /* Keep Leaflet's bottom-right controls clear of the floating panel. */
   .split-map .leaflet-bottom.leaflet-right { right: 436px; }
 }
