@@ -1,5 +1,6 @@
 // View model of one rotation card ("ficha"): plain-language summary, years, criteria, evidence.
 // Pure functions only (no DOM, no fetch) so the screen and the PDF export share the same content.
+import { zoneGreennessDetail } from "./api.js";
 
 const MESES = [
   "January", "February", "March", "April", "May", "June",
@@ -146,11 +147,16 @@ function detalleTecnico(result, contexto) {
   }
   items.push(`Scores by criterion (0–100): ${Object.entries(result.criterios)
     .map(([id, v]) => `${CRITERIO_INFO[id]?.corto ?? id} ${v}`).join(", ")}.`);
+  const verdor = zoneGreennessDetail(contexto.ndvi);
+  if (verdor) items.push(verdor);
   items.push(`Climate source: ${contexto.fuente ?? "NASA POWER"}.`);
   return items;
 }
 
 function datosUsados(result, contexto) {
+  const satelite = contexto.ndvi
+    ? "MODIS NDVI around the pilot site is shown for context only and does not change the score; SMAP soil moisture is not used."
+    : "The result does not use MODIS NDVI or SMAP.";
   return [
     `Climate data source: ${contexto.fuente ?? "NASA POWER"}. Period queried: 1991–2024.`,
     contexto.corregido
@@ -158,8 +164,8 @@ function datosUsados(result, contexto) {
       : "Without local correction, NASA POWER may underestimate frost risk in the highlands.",
     `The ${result.total} % indicates how well this rotation matches your priorities; it is not a probability of harvest success.`,
     contexto.pendiente
-      ? `Terrain slope at your point: ${Math.round(contexto.pendiente.pendiente_pct)} % (${contexto.pendiente.fuente}). The result does not yet incorporate MODIS NDVI or SMAP.`
-      : "We could not calculate slope at your point; an estimated slope of 18 % is used. The result does not yet incorporate MODIS NDVI or SMAP.",
+      ? `Terrain slope at your point: ${Math.round(contexto.pendiente.pendiente_pct)} % (${contexto.pendiente.fuente}). ${satelite}`
+      : `We could not calculate slope at your point; an estimated slope of 18 % is used. ${satelite}`,
     "Historical climate informs the comparison; it is not a forecast for the next growing season.",
   ];
 }

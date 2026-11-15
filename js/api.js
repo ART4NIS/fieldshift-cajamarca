@@ -225,6 +225,38 @@ export function zoneSteepNote(terrain, pilotName) {
     "with slopes above 25 %, according to NASA SRTM.";
 }
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/** Months with the highest and lowest mean NDVI from the pilot's "ndvi" block, or null. */
+export function greennessExtremes(ndvi) {
+  const meses = (ndvi?.mensual ?? []).filter((m) => Number.isFinite(m.media));
+  if (meses.length < 12) return null;
+  const alto = meses.reduce((a, b) => (b.media > a.media ? b : a));
+  const bajo = meses.reduce((a, b) => (b.media < a.media ? b : a));
+  return { alto, bajo };
+}
+
+/** Plain-language note on when fields and pasture around the pilot are greenest, or null. */
+export function zoneGreennessNote(ndvi, pilotName) {
+  const ext = greennessExtremes(ndvi);
+  if (!ext) return null;
+  return `Around the ${pilotName} pilot site, satellite images (NASA MODIS) show that fields and pasture ` +
+    `are greenest in ${MONTH_NAMES[ext.alto.mes - 1]} and least green in ${MONTH_NAMES[ext.bajo.mes - 1]}.`;
+}
+
+/** Exact NDVI figures for the technical detail, or null. */
+export function zoneGreennessDetail(ndvi) {
+  const ext = greennessExtremes(ndvi);
+  if (!ext) return null;
+  const puntos = ndvi.n_puntos ? `${ndvi.n_puntos} pasture and cropland points around the pilot site, ` : "";
+  return `Vegetation greenness (MODIS NDVI, 250 m, ${puntos}${ndvi.periodo}): ` +
+    `highest ${ext.alto.media.toFixed(2)} in ${MONTH_NAMES[ext.alto.mes - 1]}, ` +
+    `lowest ${ext.bajo.media.toFixed(2)} in ${MONTH_NAMES[ext.bajo.mes - 1]}. Shown for context; it does not change the score.`;
+}
+
 /**
  * Fetch POWER (cache fallback) and return
  * { clima, elevation, elevationSource, corregido, fuente }.
