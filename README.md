@@ -49,6 +49,7 @@ Es un sitio estático sin servidor ni bundler (Leaflet y Chart.js por CDN). Para
 ```bash
 npm install                                                              # d3-contour, solo para el script del área
 npm test                                                                 # tests del motor, la API y el mapa
+npm run bump                                                             # nueva versión de los .js y el .css antes de cada deploy
 
 python scripts/build_climate_bias.py --pilot cajamarca --lat -7.16 --lon -78.51   # corrección PISCO de un piloto
 python scripts/build_climate_fixture.py --pilot cajamarca                         # entrada mensual de referencia del motor

@@ -4,7 +4,8 @@
   "type": "module",
   "description": "Crop rotation decision support for the Peruvian highlands using NASA data",
   "scripts": {
-    "test": "node --test \"tests/**/*.test.js\""
+    "test": "node --test \"tests/**/*.test.js\"",
+    "bump": "node scripts/bump_asset_version.mjs"
   },
   "license": "MIT",
   "devDependencies": {

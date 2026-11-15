@@ -5,7 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FieldShift Cajamarca</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=202611142330">
+  <!-- Asset version: bump with `npm run bump` before each deploy so cached old modules are never mixed with new ones. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "./js/api.js": "./js/api.js?v=202611142330",
+        "./js/charts.js": "./js/charts.js?v=202611142330",
+        "./js/evidence.js": "./js/evidence.js?v=202611142330",
+        "./js/pisco.js": "./js/pisco.js?v=202611142330",
+        "./js/scoring.js": "./js/scoring.js?v=202611142330"
+      }
+    }
+  </script>
 </head>
 <body>
   <header class="top">
@@ -80,6 +92,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script type="module" src="js/ui.js"></script>
+  <script type="module" src="js/ui.js?v=202611142330"></script>
 </body>
 </html>
