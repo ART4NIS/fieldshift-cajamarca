@@ -253,5 +253,181 @@
     },
     "pct_area_pendiente_mayor_25": 24.1
   },
-  "satelital_actualizado": "2026-11-15"
+  "satelital_actualizado": "2026-11-15",
+  "ndvi": {
+    "periodo": "2014-2024",
+    "n_observaciones": 4174,
+    "mensual": [
+      {
+        "mes": 1,
+        "media": 0.4,
+        "n": 314
+      },
+      {
+        "mes": 2,
+        "media": 0.506,
+        "n": 285
+      },
+      {
+        "mes": 3,
+        "media": 0.533,
+        "n": 346
+      },
+      {
+        "mes": 4,
+        "media": 0.477,
+        "n": 376
+      },
+      {
+        "mes": 5,
+        "media": 0.38,
+        "n": 380
+      },
+      {
+        "mes": 6,
+        "media": 0.297,
+        "n": 380
+      },
+      {
+        "mes": 7,
+        "media": 0.26,
+        "n": 380
+      },
+      {
+        "mes": 8,
+        "media": 0.243,
+        "n": 380
+      },
+      {
+        "mes": 9,
+        "media": 0.245,
+        "n": 380
+      },
+      {
+        "mes": 10,
+        "media": 0.253,
+        "n": 246
+      },
+      {
+        "mes": 11,
+        "media": 0.271,
+        "n": 320
+      },
+      {
+        "mes": 12,
+        "media": 0.318,
+        "n": 387
+      }
+    ],
+    "anual": [
+      {
+        "anio": 2014,
+        "media": 0.387
+      },
+      {
+        "anio": 2015,
+        "media": 0.367
+      },
+      {
+        "anio": 2016,
+        "media": 0.318
+      },
+      {
+        "anio": 2017,
+        "media": 0.347
+      },
+      {
+        "anio": 2018,
+        "media": 0.343
+      },
+      {
+        "anio": 2019,
+        "media": 0.364
+      },
+      {
+        "anio": 2020,
+        "media": 0.341
+      },
+      {
+        "anio": 2021,
+        "media": 0.363
+      },
+      {
+        "anio": 2022,
+        "media": 0.347
+      },
+      {
+        "anio": 2023,
+        "media": 0.324
+      },
+      {
+        "anio": 2024,
+        "media": 0.352
+      }
+    ],
+    "tendencia_por_anio": -0.0021,
+    "anomalia_ultimo_anio": {
+      "anio": 2024,
+      "meses": [
+        {
+          "mes": 1,
+          "anomalia": 0.035
+        },
+        {
+          "mes": 2,
+          "anomalia": 0.047
+        },
+        {
+          "mes": 3,
+          "anomalia": 0.032
+        },
+        {
+          "mes": 4,
+          "anomalia": 0.026
+        },
+        {
+          "mes": 5,
+          "anomalia": -0.019
+        },
+        {
+          "mes": 6,
+          "anomalia": -0.016
+        },
+        {
+          "mes": 7,
+          "anomalia": -0.018
+        },
+        {
+          "mes": 8,
+          "anomalia": 0.003
+        },
+        {
+          "mes": 9,
+          "anomalia": -0.007
+        },
+        {
+          "mes": 10,
+          "anomalia": -0.017
+        },
+        {
+          "mes": 11,
+          "anomalia": -0.016
+        },
+        {
+          "mes": 12,
+          "anomalia": 0.002
+        }
+      ]
+    },
+    "fuente": "MODIS MOD13Q1.061 (250 m, 16 days) via NASA AppEEARS",
+    "filtro": "pixel_reliability 0-1 (good/marginal)",
+    "unidad": "NDVI (-1 a 1)",
+    "n_puntos": 19,
+    "cobertura": {
+      "fuente": "MODIS MCD12Q1.061 LC_Type1 (IGBP, 500 m), most frequent class per point",
+      "puntos_por_clase": {
+        "grassland": 19
+      }
+    }
+  }
 }
