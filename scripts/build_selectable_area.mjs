@@ -30,8 +30,9 @@ const SENTINEL = -500; // outside the circle: far below the threshold, the conto
 const LAKE_VALUE = THRESHOLD_M - 1;
 const BATCH = 100; // Open-Meteo hard limit per request
 // Open-Meteo free tier counts every coordinate: 600 per minute, 5,000 per hour, 10,000 per day.
-// 100-coordinate requests spaced 13 s apart stay under the per-minute limit (~460 coordinates/min).
-const THROTTLE_MS = 13000;
+// 100-coordinate requests spaced 75 s apart stay under the per-hour limit (4,800 coordinates/hour).
+// A run that hits the daily limit stops; rerun it the next day and the cache resumes where it left off.
+const THROTTLE_MS = 75000;
 const SIMPLIFY_DEG = 0.004; // ~450 m
 const MIN_PART_CELLS = 1.5; // drop islands/holes smaller than this many grid cells
 const KM_PER_DEG = 111.195;
