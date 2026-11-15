@@ -10,6 +10,7 @@ import {
   fetchSrtmSlope,
   zoneSlope,
   zoneSteepNote,
+  zoneGreennessNote,
   SRTM_FUENTE,
   fallbackAssessment,
   searchPlaces,
@@ -64,6 +65,7 @@ const state = {
   srtm: null, // data/srtm/index.json: NASA SRTM 30 m grids around the pilots
   srtmGrids: new Map(),
   terrain: null, // SRTM statistics of the chosen pilot zone (data/pilots/<id>.json "terrain")
+  ndvi: null, // MODIS NDVI climatology of the chosen pilot zone (data/pilots/<id>.json "ndvi")
   images: null, // data/imagenes_cultivos.json -> { cropId: { url, alt, autor, licencia, pagina } }
   selected: null, // id of the rotation shown in the detail column
   glosario: [],
@@ -415,6 +417,7 @@ async function loadClimate() {
   state.aviso = null;
   state.pendiente = null;
   state.terrain = null;
+  state.ndvi = null;
   // Slope runs in parallel with the climate request (pointSlope never rejects: null on failure).
   const slopePromise = pointSlope(p);
   if (p.mode === "live") {
@@ -449,12 +452,13 @@ async function loadClimate() {
   }
 }
 
-/** Pilot JSON "terrain" block (SRTM statistics of the pilot zone), or null. */
-async function loadTerrain(pilotId) {
+/** Satellite blocks of the pilot JSON: { terrain (SRTM), ndvi (MODIS) }, each null when missing. */
+async function loadPilotSatellite(pilotId) {
   try {
-    return (await loadJson(`data/pilots/${pilotId}.json`)).terrain ?? null;
+    const pilot = await loadJson(`data/pilots/${pilotId}.json`);
+    return { terrain: pilot.terrain ?? null, ndvi: pilot.ndvi ?? null };
   } catch {
-    return null;
+    return { terrain: null, ndvi: null };
   }
 }
 
@@ -467,11 +471,13 @@ async function loadTerrain(pilotId) {
  */
 async function pointSlope(p) {
   const fetchVersioned = (path) => fetch(ASSET_VERSION ? `${path}?v=${ASSET_VERSION}` : path);
-  const [srtm, terrain] = await Promise.all([
+  const [srtm, sat] = await Promise.all([
     fetchSrtmSlope(p.lat, p.lon, { index: state.srtm, fetchImpl: fetchVersioned, cache: state.srtmGrids }),
-    p.mode === "pilot" ? loadTerrain(p.pilotId) : null,
+    p.mode === "pilot" ? loadPilotSatellite(p.pilotId) : { terrain: null, ndvi: null },
   ]);
+  const { terrain } = sat;
   state.terrain = terrain;
+  state.ndvi = sat.ndvi;
   if (srtm) return srtm;
   return (await fetchSlope(p.lat, p.lon)) ?? zoneSlope(terrain);
 }
@@ -481,6 +487,13 @@ function zoneNote() {
   if (!state.terrain || state.parcela?.mode !== "pilot") return null;
   const name = state.pilots.find((x) => x.id === state.parcela.pilotId)?.nombre ?? state.parcela.pilotId;
   return zoneSteepNote(state.terrain, name);
+}
+
+/** Pilot-zone note from MODIS NDVI ("when fields are greenest"), only for points next to a pilot. */
+function greennessNote() {
+  if (!state.ndvi || state.parcela?.mode !== "pilot") return null;
+  const name = state.pilots.find((x) => x.id === state.parcela.pilotId)?.nombre ?? state.parcela.pilotId;
+  return zoneGreennessNote(state.ndvi, name);
 }
 
 function currentResults() {
@@ -507,6 +520,7 @@ function buildFichas() {
     corregido: state.corregido,
     periodoCorreccion: state.periodoCorreccion,
     pendiente: state.pendiente,
+    ndvi: state.parcela?.mode === "pilot" ? state.ndvi : null,
   };
   const fichas = results.map((result, posicion) => construirFicha({
     result,
@@ -528,6 +542,7 @@ function commonNotes(shared) {
   return [
     ...(state.pendiente ? [slopeSentence(state.pendiente)] : []),
     ...(zoneNote() ? [zoneNote()] : []),
+    ...(greennessNote() ? [greennessNote()] : []),
     ...(shared.includes(AVISO_DATOS_ESTIMADOS)
       ? ["Crop parameters are estimates from published studies and have not yet been validated in the field."]
       : []),
@@ -564,6 +579,9 @@ function renderResults() {
   const slopeText = [state.pendiente ? slopeSentence(state.pendiente) : "", zoneNote() ?? ""].filter(Boolean).join(" ");
   slopeNote.textContent = slopeText;
   slopeNote.hidden = !slopeText;
+  const greenNote = $("greenness-note");
+  greenNote.textContent = greennessNote() ?? "";
+  greenNote.hidden = !greenNote.textContent;
   $("estimated-note").hidden = !shared.includes(AVISO_DATOS_ESTIMADOS);
   const notes = [
     ...(state.aviso ? [state.aviso] : []),
