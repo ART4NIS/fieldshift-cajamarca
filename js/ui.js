@@ -22,13 +22,12 @@ import {
   AVISO_DATOS_ESTIMADOS,
 } from "./scoring.js";
 
-const MESES = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-];
 import { renderRiskCalendar, renderRadar } from "./charts.js";
-
-import { renderEvidence } from "./evidence.js";
+import { construirFicha } from "./ficha.js";
+import { renderRotationList, markSelected, renderRotationDetail } from "./results.js";
+import { CATEGORIAS, filtrarGlosario, agruparPorCategoria } from "./glossary.js";
+import { exportarPdf } from "./pdf.js";
+import { icon, CRITERIO_ICON } from "./icons.js";
 
 const LAT_MAX = -6;
 const LAT_MIN = -16;
@@ -58,14 +57,21 @@ const state = {
   fuente: "No informada",
   periodoCorreccion: null,
   fichas: null,
+  images: null, // data/imagenes_cultivos.json -> { cropId: { url, alt, autor, licencia, pagina } }
+  selected: null, // id of the rotation shown in the detail column
+  glosario: [],
+  glosarioFiltro: { texto: "", categoria: null },
   pesos: Object.fromEntries(CRITERIOS.map((c) => [c, 3])),
   cultivos: [],
   rotaciones: [],
   pilots: [],
 };
 
+// Same version as this module (set by `npm run bump`), so data files are never older than the code reading them.
+const ASSET_VERSION = new URL(import.meta.url).searchParams.get("v");
+
 async function loadJson(path) {
-  const res = await fetch(path);
+  const res = await fetch(ASSET_VERSION ? `${path}?v=${ASSET_VERSION}` : path);
   if (!res.ok) throw new Error(`${path}: ${res.status}`);
   return res.json();
 }
@@ -77,13 +83,30 @@ function showStep(name) {
     if (b.dataset.step === name) b.setAttribute("aria-current", "step");
     else b.removeAttribute("aria-current");
   });
-  if (name === "mapa") map?.invalidateSize();
+  // The home step is a full-screen map with a floating panel; the other steps are normal reading pages.
+  document.body.classList.toggle("home", name === "inicio");
+  window.scrollTo(0, 0);
+  if (name === "inicio") map?.invalidateSize();
   if (name === "resultados") renderResults();
 }
 
 // ---- map ---------------------------------------------------------------
 let map = null;
 let marker = null;
+
+/** Width in px of the map hidden under the floating panel (0 on phones, where the panel is not over the map). */
+function panelCover() {
+  const panel = document.querySelector(".panel");
+  if (!panel || getComputedStyle(panel).position !== "absolute") return 0;
+  return panel.offsetWidth + 12;
+}
+
+/** Centers a point in the visible part of the map, i.e. left of the floating panel. */
+function focusOn(lat, lon, zoom) {
+  map.setView([lat, lon], zoom, { animate: false });
+  const shift = panelCover() / 2;
+  if (shift) map.panBy([shift, 0], { animate: false });
+}
 
 async function loadPilots() {
   try {
@@ -111,7 +134,8 @@ function selectPoint(lat, lon, pilotId = null) {
   }
   if (lat > LAT_MAX || lat < LAT_MIN) {
     $("map-msg").textContent = "Este punto está fuera de la zona andina del Perú que cubre la herramienta (latitud entre -6 y -16).";
-    $("to-prioridades").disabled = true;
+    $("to-resultados").disabled = true;
+    $("cta-hint").hidden = false;
     state.parcela = null;
     return;
   }
@@ -139,18 +163,53 @@ function selectPoint(lat, lon, pilotId = null) {
   state.clima = null;
   state.pendiente = null;
   state.aviso = null;
+  state.selected = null;
   if (marker) marker.setLatLng([lat, lon]);
-  else marker = L.marker([lat, lon]).addTo(map);
+  else {
+    const pin = L.divIcon({ className: "sow-pin", html: "<span></span>", iconSize: [30, 30], iconAnchor: [15, 30] });
+    marker = L.marker([lat, lon], { icon: pin, keyboard: false }).addTo(map);
+  }
   $("coords").textContent = coordsText();
-  $("to-prioridades").disabled = false;
+  $("coords").classList.add("is-set");
+  setStatus("");
+  $("to-resultados").disabled = false;
+  $("cta-hint").hidden = true;
 }
 
 async function initMap() {
-  map = L.map("map").setView([-7.16, -78.51], 8);
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 18,
+  map = L.map("map", { zoomControl: false }).setView([-7.16, -78.51], 8);
+  L.control.zoom({ position: "bottomright" }).addTo(map);
+  L.control.scale({ position: "bottomright", imperial: false }).addTo(map);
+  // Place names sit above the gray "no data" mask so they stay readable; they never take clicks.
+  map.createPane("labels");
+  map.getPane("labels").style.zIndex = 450;
+  map.getPane("labels").style.pointerEvents = "none";
+  const satellite = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      maxZoom: 19,
+      attribution: "Imágenes &copy; Esri, Maxar, Earthstar Geographics y la comunidad de usuarios de GIS",
+    },
+  ).addTo(map);
+  const labels = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+    { maxZoom: 19, pane: "labels", attribution: "Nombres &copy; Esri" },
+  ).addTo(map);
+  const blueMarble = L.tileLayer(
+    "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg",
+    { maxNativeZoom: 8, maxZoom: 19, attribution: "Imagen: NASA Blue Marble (GIBS)" },
+  );
+  const streets = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
     attribution: "&copy; OpenStreetMap",
-  }).addTo(map);
+  });
+  L.control
+    .layers(
+      { "Satélite": satellite, "NASA Blue Marble": blueMarble, "Mapa de calles": streets },
+      { "Nombres de lugares": labels },
+      { position: "bottomright" },
+    )
+    .addTo(map);
   map.on("click", (e) => selectPoint(e.latlng.lat, e.latlng.lng));
   $("search").addEventListener("submit", onSearch);
   try {
@@ -173,7 +232,7 @@ async function initMap() {
     btn.type = "button";
     btn.textContent = p.nombre ?? p.id;
     btn.addEventListener("click", () => {
-      map.setView([p.lat, p.lon], ZONE_ZOOM);
+      focusOn(p.lat, p.lon, ZONE_ZOOM);
       selectPoint(p.lat, p.lon, p.id);
     });
     $("pilots").append(btn);
@@ -196,16 +255,17 @@ function drawPilotZones(pilots) {
   const world = [[-89, -179], [-89, 179], [89, 179], [89, -179]];
   L.polygon([world, ...rings], {
     stroke: false,
-    fillColor: "#6b6b6b",
-    fillOpacity: 0.45,
+    fillColor: "#000000",
+    fillOpacity: 0.5,
     interactive: false,
   }).addTo(map);
+  // Bright outline: must read clearly over satellite imagery (dark greens and browns).
   for (const zone of zones) {
     L.polygon(zone, {
-      color: "#2f6b3f",
-      weight: 2,
-      fillColor: "#3f9a55",
-      fillOpacity: 0.15,
+      color: "#5ef08f",
+      weight: 2.5,
+      fillColor: "#5ef08f",
+      fillOpacity: 0.08,
       interactive: false,
     }).addTo(map);
   }
@@ -215,13 +275,13 @@ function drawPilotZones(pilots) {
       radius: 9,
       color: "#ffffff",
       weight: 2,
-      fillColor: "#2f6b3f",
+      fillColor: "#1e8e3e",
       fillOpacity: 1,
     })
       .bindTooltip(p.nombre ?? p.id, { direction: "top" })
       .on("click", (e) => {
         L.DomEvent.stopPropagation(e);
-        map.setView([p.lat, p.lon], ZONE_ZOOM);
+        focusOn(p.lat, p.lon, ZONE_ZOOM);
       }),
   );
   const toggleDots = () => {
@@ -234,7 +294,7 @@ function drawPilotZones(pilots) {
   map.on("zoomend", toggleDots);
   const bounds = L.latLngBounds(rings.flat());
   if (bounds.isValid()) {
-    map.fitBounds(bounds, { padding: [12, 12] });
+    map.fitBounds(bounds, { paddingTopLeft: [12, 12], paddingBottomRight: [12 + panelCover(), 12] });
     state.searchBounds = {
       south: bounds.getSouth(), west: bounds.getWest(), north: bounds.getNorth(), east: bounds.getEast(),
     };
@@ -263,7 +323,7 @@ function renderSearchResults(places) {
     btn.addEventListener("click", () => {
       list.replaceChildren();
       $("search-msg").textContent = "";
-      map.setView([p.lat, p.lon], 13);
+      focusOn(p.lat, p.lon, 13);
       selectPoint(p.lat, p.lon);
     });
     const li = document.createElement("li");
@@ -297,8 +357,14 @@ async function onSearch(event) {
 }
 
 // ---- climate + scoring -------------------------------------------------
+/** Progress and error text: under the button and, while it is open, inside the results loader. */
+function setStatus(text) {
+  $("status").textContent = text;
+  $("loader-msg").textContent = text;
+}
+
 function setBusy(busy) {
-  for (const id of ["to-prioridades", "to-resultados"]) $(id).disabled = busy;
+  $("to-resultados").disabled = busy;
 }
 
 /** Climate for the chosen point; one request at a time (concurrent callers share the same promise). */
@@ -309,7 +375,7 @@ function ensureClimate() {
     state.loading = loadClimate().finally(() => {
       state.loading = null;
       setBusy(false);
-      if (!state.parcela) $("to-prioridades").disabled = true;
+      if (!state.parcela) $("to-resultados").disabled = true;
     });
   }
   return state.loading;
@@ -324,7 +390,7 @@ async function loadClimate() {
   // Slope runs in parallel with the climate request (fetchSlope never rejects: null on failure).
   const slopePromise = fetchSlope(p.lat, p.lon);
   if (p.mode === "live") {
-    $("status").textContent = "Calculando la corrección local para su punto (puede tardar hasta un minuto la primera vez)...";
+    setStatus("Calculando la corrección local para su punto (puede tardar hasta un minuto la primera vez)...");
     try {
       const { bias } = await getLocalBias(p.lat, p.lon, { timeoutMs: LIVE_TIMEOUT_MS });
       options = { climateBias: bias, fuenteCorreccion: "con corrección local calculada para este punto (SENAMHI PISCO)" };
@@ -336,7 +402,7 @@ async function loadClimate() {
       $("coords").textContent = coordsText();
     }
   } else {
-    $("status").textContent = "Cargando el clima de su parcela...";
+    setStatus("Cargando el clima de su parcela...");
   }
   try {
     const res = await fetchClimate(p.lat, p.lon, options);
@@ -347,10 +413,10 @@ async function loadClimate() {
     state.pendiente = await slopePromise;
     const alt = checkAltitude(res.elevation);
     const status = alt.ok ? "" : `${alt.mensaje} (Fuente: ${res.elevationSource})`;
-    $("status").textContent = [state.aviso, status].filter(Boolean).join(" ");
+    setStatus([state.aviso, status].filter(Boolean).join(" "));
     return true;
   } catch {
-    $("status").textContent = "No pudimos obtener el clima de este punto. Intente de nuevo o elija otro punto.";
+    setStatus("No pudimos obtener el clima de este punto. Intente de nuevo o elija otro punto.");
     return false;
   }
 }
@@ -360,12 +426,8 @@ function currentResults() {
   return evaluarRotaciones(state.clima, state.cultivos, state.rotaciones, state.pesos, contexto);
 }
 
-function renderResults() {
-  const box = $("results");
-  if (!state.clima) {
-    box.textContent = "Primero elija una parcela en el mapa.";
-    return;
-  }
+/** View models of the three cards, best first, plus the notes shared by all of them. */
+function buildFichas() {
   const results = currentResults();
   // Warnings shared by every rotation are shown once (banner / "before sowing" box), not on each card.
   // Crop warnings ("Papa: ...") stay on their card even when every rotation has that crop.
@@ -374,6 +436,60 @@ function renderResults() {
   const shared = results.length
     ? results[0].avisos.filter((a) => !isCropWarning(a) && results.every((r) => r.avisos.includes(a)))
     : [];
+  const contexto = {
+    fuente: state.fuente,
+    corregido: state.corregido,
+    periodoCorreccion: state.periodoCorreccion,
+    pendiente: state.pendiente,
+  };
+  const fichas = results.map((result, posicion) => construirFicha({
+    result,
+    rotacion: state.rotaciones.find((r) => r.id === result.rotacion),
+    cultivos: state.cultivos,
+    doc: state.fichas,
+    pesos: state.pesos,
+    posicion,
+    mejorTotal: results[0].total,
+    otros: results.filter((r) => r !== result).map((r) => r.criterios),
+    contexto,
+    avisos: result.avisos.filter((a) => !shared.includes(a) && a !== AVISO_SIN_CORRECCION && a !== AVISO_DATOS_ESTIMADOS),
+  }));
+  return { results, fichas, shared };
+}
+
+/** Notes that apply to every card: shown once in "Antes de sembrar" and once in the PDF. */
+function commonNotes(shared) {
+  return [
+    ...(state.pendiente ? [slopeSentence(state.pendiente.pendiente_pct)] : []),
+    ...(shared.includes(AVISO_DATOS_ESTIMADOS)
+      ? ["Los datos de los cultivos son estimaciones de estudios publicados, todavía sin validar en campo."]
+      : []),
+    ...(state.aviso ? [state.aviso] : []),
+    ...shared.filter((a) => a !== AVISO_SIN_CORRECCION && a !== AVISO_DATOS_ESTIMADOS),
+  ];
+}
+
+function placeText() {
+  if (!state.parcela) return "";
+  const { lat, lon, pilotId } = state.parcela;
+  const name = state.pilots.find((p) => p.id === pilotId)?.nombre ?? pilotId;
+  return `Zona de ${name} · latitud ${lat.toFixed(4)}, longitud ${lon.toFixed(4)}`;
+}
+
+function renderResults() {
+  const ready = Boolean(state.clima);
+  $("results-empty").hidden = ready;
+  $("results-layout").hidden = !ready;
+  $("export-all").hidden = !ready;
+  $("before-sowing").hidden = !ready;
+  if (!ready) {
+    $("frost-banner").hidden = true;
+    $("results-place").textContent = "";
+    return;
+  }
+  const { results, fichas, shared } = buildFichas();
+  if (!fichas.some((f) => f.id === state.selected)) state.selected = fichas[0]?.id ?? null;
+  $("results-place").textContent = placeText();
   // The banner is for climate with no local correction at all. A distant pilot correction (fallback)
   // is still a correction: its own warning with the distance goes in the "before sowing" box instead.
   $("frost-banner").hidden = state.corregido || state.parcela?.mode === "fallback";
@@ -387,15 +503,57 @@ function renderResults() {
     ...shared.filter((a) => a !== AVISO_SIN_CORRECCION && a !== AVISO_DATOS_ESTIMADOS),
   ];
   $("common-notes").replaceChildren(...notes.map((a) => Object.assign(document.createElement("li"), { textContent: a })));
-  $("before-sowing").hidden = false;
-  box.replaceChildren(
-    ...results.map((r) => resultCard({
-      ...r,
-      avisos: r.avisos.filter((a) => !shared.includes(a) && a !== AVISO_SIN_CORRECCION && a !== AVISO_DATOS_ESTIMADOS),
-    })),
-  );
-  renderRiskCalendar($("chart-risk"), calendarioRiesgos(state.clima));
-  renderRadar($("chart-radar"), results);
+
+  renderRotationList($("rotation-list"), fichas, {
+    selectedId: state.selected,
+    images: state.images,
+    onSelect: (id) => {
+      if (id === state.selected) return;
+      state.selected = id;
+      markSelected($("rotation-list"), id);
+      renderSelected(results, fichas, shared);
+      // On a phone the detail is below the cards: bring it into view.
+      if (window.matchMedia("(max-width: 979px)").matches) {
+        $("rotation-detail").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    },
+  });
+  renderSelected(results, fichas, shared);
+}
+
+/** Detail column and its two charts for the selected rotation. */
+function renderSelected(results, fichas, shared) {
+  const selected = fichas.find((f) => f.id === state.selected);
+  if (!selected) return;
+  const { riskCanvas, radarCanvas } = renderRotationDetail($("rotation-detail"), selected, {
+    images: state.images,
+    onExport: (ficha) => downloadPdf([ficha], shared),
+  });
+  renderRiskCalendar(riskCanvas, calendarioRiesgos(state.clima), selected.mesesEnCampo);
+  renderRadar(radarCanvas, results, state.selected);
+}
+
+let toastTimer = null;
+function toast(text) {
+  const el = $("toast");
+  el.textContent = text;
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, 4500);
+}
+
+async function downloadPdf(fichas, shared) {
+  toast("Preparando el PDF…");
+  try {
+    await exportarPdf(fichas, {
+      lugar: placeText(),
+      fecha: new Date().toLocaleDateString("es-PE", { year: "numeric", month: "long", day: "numeric" }),
+      comunes: commonNotes(shared),
+    });
+    toast(fichas.length === 1 ? "Ficha descargada." : "Fichas descargadas.");
+  } catch {
+    toast("No pudimos crear el PDF. Revise su conexión e intente de nuevo.");
+  }
 }
 
 /** Plain-language class: < 8 % gentle, 8-20 % moderate, > 20 % steep. */
@@ -409,69 +567,6 @@ function slopeSentence(pct) {
   return `Pendiente estimada del terreno en su punto: ${Math.round(pct)} % (${slopeClass(pct)}).`;
 }
 
-function resultCard(r) {
-  const el = document.createElement("article");
-  el.className = "card";
-  const head = document.createElement("header");
-  const title = document.createElement("h3");
-  title.textContent = `Rotación ${r.rotacion}: ${r.nombre}`;
-  const total = document.createElement("span");
-  total.className = "total";
-  total.textContent = `${Math.round(r.total)}/100`;
-  head.append(title, total);
-  const badge = document.createElement("span");
-  badge.className = "badge";
-  badge.textContent = `Confianza: ${r.confianza}`;
-  el.append(head, badge);
-  if (r.avisos.length) {
-    const ul = document.createElement("ul");
-    for (const a of r.avisos) {
-      const li = document.createElement("li");
-      li.textContent = a;
-      ul.append(li);
-    }
-    el.append(ul);
-  }
-  const detail = techDetail(r.cultivos ?? []);
-  if (detail) el.append(detail);
-  el.append(renderEvidence(state.fichas, r, state));
-  return el;
-}
-
-/** Exact frost figures for the local technician, collapsed by default. */
-function techDetail(cultivos) {
-  const seen = new Set();
-  const items = [];
-  if (state.pendiente) {
-    items.push(
-      `Pendiente: ${Math.round(state.pendiente.pendiente_pct)} % (Copernicus DEM 90 m vía Open-Meteo; ` +
-      "puede subestimar en laderas muy empinadas o andenes).",
-    );
-  }
-  for (const c of cultivos) {
-    for (const { mes, prob } of c.heladas ?? []) {
-      const key = `${c.id}-${mes}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      items.push(
-        `${c.nombre}, ${MESES[mes - 1]}: ${Math.round(prob * 100)} % de los años con mínima bajo 2 °C; ` +
-        `daño desde ${c.temp_dano_helada} °C.`,
-      );
-    }
-  }
-  if (!items.length) return null;
-  const details = document.createElement("details");
-  details.className = "tech";
-  const summary = document.createElement("summary");
-  summary.textContent = "Detalle para el técnico";
-  const ul = document.createElement("ul");
-  for (const t of [...items, `Fuente: ${state.fuente ?? "NASA POWER"}.`]) {
-    ul.append(Object.assign(document.createElement("li"), { textContent: t }));
-  }
-  details.append(summary, ul);
-  return details;
-}
-
 // ---- priorities --------------------------------------------------------
 function initSliders() {
   for (const c of CRITERIOS) {
@@ -481,7 +576,8 @@ function initSliders() {
     const label = document.createElement("label");
     label.htmlFor = `w-${c}`;
     const name = document.createElement("span");
-    name.textContent = titulo;
+    name.className = "slider-name";
+    name.append(icon(CRITERIO_ICON[c] ?? "check", 18), titulo);
     const val = document.createElement("output");
     val.textContent = state.pesos[c];
     label.append(name, val);
@@ -500,36 +596,197 @@ function initSliders() {
 }
 
 // ---- glossary ----------------------------------------------------------
+function renderGlossary() {
+  const { texto, categoria } = state.glosarioFiltro;
+  const found = filtrarGlosario(state.glosario, { texto, categoria });
+  const box = $("glossary");
+  $("glossary-count").textContent = texto || categoria
+    ? `${found.length} ${found.length === 1 ? "palabra encontrada" : "palabras encontradas"}`
+    : `${found.length} palabras en ${CATEGORIAS.length} temas`;
+  if (!found.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    const p = document.createElement("p");
+    p.textContent = "No encontramos esa palabra. Pruebe con otra o quite el filtro.";
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "btn btn-ghost";
+    reset.textContent = "Ver todas las palabras";
+    reset.addEventListener("click", () => {
+      state.glosarioFiltro = { texto: "", categoria: null };
+      $("glossary-q").value = "";
+      renderGlossaryCats();
+      renderGlossary();
+    });
+    empty.append(p, reset);
+    box.replaceChildren(empty);
+    return;
+  }
+  box.replaceChildren(...agruparPorCategoria(found).map((group, gi) => {
+    const section = document.createElement("section");
+    section.className = "gloss-group";
+    section.style.setProperty("--i", gi);
+    const head = document.createElement("header");
+    const title = document.createElement("h3");
+    title.textContent = group.categoria.nombre;
+    const count = document.createElement("span");
+    count.className = "acc-count";
+    count.textContent = group.terminos.length;
+    head.append(title, count);
+    const dl = document.createElement("dl");
+    for (const t of group.terminos) {
+      const row = document.createElement("div");
+      row.className = "term";
+      const dt = document.createElement("dt");
+      dt.textContent = t.termino;
+      const dd = document.createElement("dd");
+      dd.textContent = t.definicion;
+      row.append(dt, dd);
+      dl.append(row);
+    }
+    section.append(head, dl);
+    return section;
+  }));
+}
+
+function renderGlossaryCats() {
+  const make = (id, nombre) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = nombre;
+    btn.setAttribute("aria-pressed", String(state.glosarioFiltro.categoria === id));
+    btn.addEventListener("click", () => {
+      state.glosarioFiltro.categoria = id;
+      renderGlossaryCats();
+      renderGlossary();
+    });
+    return btn;
+  };
+  const used = new Set(state.glosario.map((t) => t.categoria));
+  $("glossary-cats").replaceChildren(
+    make(null, "Todos"),
+    ...CATEGORIAS.filter((c) => used.has(c.id)).map((c) => make(c.id, c.nombre)),
+  );
+}
+
 async function initGlossary() {
   try {
     const data = await loadJson("data/glosario.json");
     const terms = Array.isArray(data) ? data : data.terminos ?? data.glosario ?? [];
-    if (!terms.length) return;
-    const dl = document.createElement("dl");
-    for (const t of terms) {
-      const dt = document.createElement("dt");
-      dt.textContent = t.termino ?? t.term;
-      const dd = document.createElement("dd");
-      dd.textContent = t.definicion ?? t.definition;
-      dl.append(dt, dd);
-    }
-    $("glossary").replaceChildren(dl);
+    state.glosario = terms.map((t) => ({
+      termino: t.termino ?? t.term,
+      definicion: t.definicion ?? t.definition,
+      categoria: t.categoria ?? "otros",
+    }));
+    $("glossary-q").addEventListener("input", (e) => {
+      state.glosarioFiltro.texto = e.target.value;
+      renderGlossary();
+    });
+    renderGlossaryCats();
+    renderGlossary();
   } catch {
-    // keep the "Glosario en preparación" placeholder
+    $("glossary").textContent = "No pudimos cargar el glosario. Recargue la página.";
   }
+}
+
+// ---- theme ---------------------------------------------------------------
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const next = theme === "dark" ? "claro" : "oscuro";
+  const btn = $("theme-toggle");
+  btn.replaceChildren(icon(theme === "dark" ? "sun" : "moon", 20));
+  btn.setAttribute("aria-label", `Cambiar a modo ${next}`);
+  btn.title = `Cambiar a modo ${next}`;
+}
+
+function initTheme() {
+  applyTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
+  $("theme-toggle").addEventListener("click", () => {
+    const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(theme);
+    try {
+      localStorage.setItem("soworbit-theme", theme);
+    } catch {
+      // storage blocked: the choice simply lasts for this visit
+    }
+    // Charts read their colors from the theme when drawn.
+    if (state.clima && !$("step-resultados").hidden) renderResults();
+  });
+}
+
+// ---- loading screens -----------------------------------------------------
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const SPLASH_MIN_MS = 1600;
+const LOADER_MIN_MS = 1800;
+
+/** Opening screen -> short introduction -> the tool. */
+async function finishSplash(startedAt) {
+  await wait(Math.max(0, SPLASH_MIN_MS - (performance.now() - startedAt)));
+  $("welcome").hidden = false;
+  $("splash").classList.add("is-leaving");
+  await wait(450);
+  $("splash").remove();
+  $("start").focus();
+  $("start").addEventListener("click", () => {
+    $("welcome").classList.add("is-leaving");
+    setTimeout(() => $("welcome").remove(), 350);
+  });
+}
+
+/** Runs the climate request behind the results loader; the steps tick while it works. */
+async function generateResults() {
+  if (!state.parcela) {
+    $("map-msg").textContent = "Primero elija un punto en el mapa.";
+    return;
+  }
+  const loader = $("results-loader");
+  const steps = [...$("loader-steps").children];
+  $("loader-msg").textContent = "";
+  loader.hidden = false;
+  const startedAt = performance.now();
+  let current = 0;
+  const advance = () => {
+    steps.forEach((li, i) => {
+      li.classList.toggle("is-done", i < current);
+      li.classList.toggle("is-active", i === current);
+    });
+  };
+  advance();
+  // The last step ("comparing") stays active until the climate request has really finished.
+  const timer = setInterval(() => {
+    if (current < steps.length - 1) {
+      current += 1;
+      advance();
+    }
+  }, LOADER_MIN_MS / steps.length);
+  const ok = await ensureClimate();
+  await wait(Math.max(0, LOADER_MIN_MS - (performance.now() - startedAt)));
+  clearInterval(timer);
+  if (ok) {
+    current = steps.length;
+    advance();
+    await wait(250);
+    showStep("resultados");
+  }
+  loader.hidden = true;
 }
 
 // ---- boot --------------------------------------------------------------
 async function main() {
+  const startedAt = performance.now();
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    document.querySelectorAll("svg.orbit").forEach((svg) => svg.pauseAnimations?.());
+  }
+  initTheme();
   document.querySelectorAll(".steps button").forEach((b) =>
     b.addEventListener("click", () => showStep(b.dataset.step)));
-  $("to-prioridades").addEventListener("click", async () => {
-    showStep("prioridades");
-    await ensureClimate();
-  });
-  $("to-resultados").addEventListener("click", async () => {
-    if (state.parcela && await ensureClimate()) showStep("resultados");
-    else if (!state.parcela) showStep("mapa");
+  document.querySelectorAll("[data-go]").forEach((b) =>
+    b.addEventListener("click", () => showStep(b.dataset.go)));
+  // Climate is fetched only here, so the farmer can still move the point freely before asking for results.
+  $("to-resultados").addEventListener("click", generateResults);
+  $("export-all").addEventListener("click", () => {
+    const { fichas, shared } = buildFichas();
+    downloadPdf(fichas, shared);
   });
   initSliders();
   initGlossary();
@@ -539,13 +796,22 @@ async function main() {
     // Results remain usable; each card explains that evidence could not load.
   }
   try {
+    state.images = (await loadJson("data/imagenes_cultivos.json")).imagenes;
+  } catch {
+    // Cards fall back to a drawn tile with the crop initial.
+  }
+  try {
     const [c, r] = await Promise.all([loadJson("data/cultivos.json"), loadJson("data/rotaciones.json")]);
     state.cultivos = c.cultivos;
     state.rotaciones = r.rotaciones;
   } catch {
     $("map-msg").textContent = "No pudimos cargar los datos de la herramienta. Recargue la página.";
   }
-  await initMap();
+  try {
+    await initMap();
+  } finally {
+    finishSplash(startedAt);
+  }
 }
 
 main();

@@ -1,9 +1,19 @@
-# FieldShift Cajamarca 🌾
+# SowOrbit 🌾
 
 Herramienta de apoyo a decisiones para rotaciones de cultivo en la sierra peruana usando datos NASA.
 Proyecto para el NASA Space Apps Challenge 2026 — reto *Field Shift: Adapting Farms with NASA Data*.
+El repositorio conserva el nombre inicial del proyecto, FieldShift Cajamarca.
 
 El agricultor marca su parcela en el mapa, indica qué le importa más (agua, suelo, erosión, forraje, clima) y recibe una comparación de 3 rotaciones de cultivo con un calendario de riesgos de helada y sequía, el nivel de confianza del resultado y las fuentes de cada dato.
+
+## Qué ofrece la interfaz
+
+- **Parcela y prioridades en una pantalla:** mapa satelital con buscador de pueblos y un panel con las 5 prioridades.
+- **Resultados en dos columnas:** una tarjeta por rotación a la izquierda; a la derecha, la ficha de la rotación elegida, con su explicación en palabras simples, la rotación año por año con fotos, los puntajes por criterio y los gráficos.
+- **Confianza por color:** verde (alta), amarillo (media) y rojo (baja), siempre junto al texto.
+- **Fichas en PDF:** una ficha o las tres en un solo archivo.
+- **Glosario** con buscador y temas.
+- **Tema oscuro por defecto**, con un botón para pasar al claro.
 
 ## 🌍 Demo en vivo
 
@@ -19,6 +29,8 @@ Si después de una actualización la página no carga, recárguela sin caché (C
 | Corrección local de temperatura y lluvia | SENAMHI PISCOt v1.1 y PISCOp v2.1, vía IRI/LDEO Climate Data Library | Corrige el sesgo de POWER, que subestima las heladas en la sierra |
 | Altitud y pendiente | Copernicus DEM 90 m, vía la API de elevación de Open-Meteo | Verifica que el punto esté sobre 2 500 m y calcula la pendiente del punto |
 | Lagos | OpenStreetMap (ODbL) | Impide marcar el Titicaca o Junín como parcela |
+| Imagen del mapa | Esri World Imagery (satélite, por defecto), NASA GIBS Blue Marble y OpenStreetMap | Fondo del mapa; el usuario elige la capa |
+| Fotos de los cultivos | Wikimedia Commons (autor y licencia en `data/imagenes_cultivos.json` y en cada ficha) | Ilustran cada año de la rotación; son fotos de referencia, no de la parcela |
 | Búsqueda de lugares | OpenStreetMap Nominatim | Ubica un pueblo o distrito por su nombre (1 búsqueda por segundo, sin autocompletar) |
 
 NASA POWER es el único dataset NASA activo en la versión actual. La altitud y la pendiente vienen de Copernicus, no de SRTM.
@@ -50,7 +62,7 @@ Es un sitio estático sin servidor ni bundler (Leaflet y Chart.js por CDN). Para
 ```bash
 npm install                                                              # d3-contour, solo para el script del área
 npm test                                                                 # tests del motor, la API y el mapa
-npm run bump                                                             # nueva versión de los .js y el .css antes de cada deploy
+npm run bump                                                             # nueva versión de los .js, el .css y los datos antes de cada deploy
 
 python scripts/build_climate_bias.py --pilot cajamarca --lat -7.16 --lon -78.51   # corrección PISCO de un piloto
 python scripts/build_climate_fixture.py --pilot cajamarca                         # entrada mensual de referencia del motor
@@ -85,6 +97,8 @@ Sí. Usamos un asistente de programación con IA (Claude Code, de Anthropic) par
 - Copernicus DEM GLO-90 — https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model
 - OpenStreetMap — https://www.openstreetmap.org/copyright
 - Nominatim (política de uso) — https://operations.osmfoundation.org/policies/nominatim/
+- Esri World Imagery — https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9
+- NASA GIBS — https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api
 - NASA AppEEARS — https://appeears.earthdatacloud.nasa.gov/
 
 ## Equipo
