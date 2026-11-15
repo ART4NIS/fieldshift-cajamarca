@@ -1,11 +1,12 @@
-"""Submit the FieldShift AppEEARS requests (NDVI + SMAP points, SRTM areas).
+"""Submit the FieldShift AppEEARS requests (NDVI grid, NDVI + SMAP points, SRTM areas).
 
 Credentials are read interactively (Earthdata username + password) and are
 only sent to the AppEEARS login endpoint; nothing is stored on disk.
 
 Usage:
-    python scripts/submit_appeears.py            # submit both tasks
-    python scripts/submit_appeears.py --dry-run  # print payloads only
+    python scripts/submit_appeears.py                     # submit the NDVI grid task
+    python scripts/submit_appeears.py --task srtm         # submit another task
+    python scripts/submit_appeears.py --dry-run           # print the payload only
     python scripts/submit_appeears.py --status   # list your recent tasks
 """
 
@@ -24,6 +25,16 @@ API = "https://appeears.earthdatacloud.nasa.gov/api"
 ROOT = Path(__file__).resolve().parent.parent
 POINTS_CSV = ROOT / "data" / "requests" / "appeears_points.csv"
 AREAS_GEOJSON = ROOT / "data" / "requests" / "appeears_srtm_areas.geojson"
+PILOTS_INDEX = ROOT / "data" / "pilots_index.json"
+
+# Grid offsets in degrees (0.04 deg ~ 4.4 km). The center point is skipped because
+# it is the city itself; land cover decides later which points are farmland.
+GRID_OFFSETS = (-0.08, -0.04, 0.0, 0.04, 0.08)
+GRID_LAYERS = [
+    ("MOD13Q1.061", "_250m_16_days_NDVI"),
+    ("MOD13Q1.061", "_250m_16_days_pixel_reliability"),
+    ("MCD12Q1.061", "LC_Type1"),
+]
 
 POINT_LAYERS = [
     ("MOD13Q1.061", "_250m_16_days_NDVI"),
@@ -52,6 +63,35 @@ def point_task() -> dict:
             "dates": [{"startDate": "01-01-2015", "endDate": "12-31-2024"}],
             "layers": [{"product": p, "layer": l} for p, l in POINT_LAYERS],
             "coordinates": coords,
+        },
+    }
+
+
+def grid_points() -> list[dict]:
+    pilots = json.loads(PILOTS_INDEX.read_text(encoding="utf-8"))["pilotos"]
+    points = []
+    for pilot in pilots:
+        for row, dlat in enumerate(GRID_OFFSETS):
+            for col, dlon in enumerate(GRID_OFFSETS):
+                if dlat == 0.0 and dlon == 0.0:
+                    continue
+                points.append({
+                    "id": f"{pilot['id']}_r{row}c{col}",
+                    "category": pilot["id"],
+                    "latitude": round(pilot["lat"] + dlat, 4),
+                    "longitude": round(pilot["lon"] + dlon, 4),
+                })
+    return points
+
+
+def grid_task() -> dict:
+    return {
+        "task_type": "point",
+        "task_name": "fieldshift-ndvi-grid",
+        "params": {
+            "dates": [{"startDate": "01-01-2015", "endDate": "12-31-2024"}],
+            "layers": [{"product": p, "layer": l} for p, l in GRID_LAYERS],
+            "coordinates": grid_points(),
         },
     }
 
@@ -96,14 +136,19 @@ def login() -> str:
     return request("POST", "/login", basic=(user, password))["token"]
 
 
+TASKS = {"ndvi-grid": grid_task, "ndvi-smap": point_task, "srtm": area_task}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--task", choices=sorted(TASKS), default="ndvi-grid",
+                        help="which task to submit (default: ndvi-grid)")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--dry-run", action="store_true", help="print payloads, do not submit")
     group.add_argument("--status", action="store_true", help="list your recent tasks")
     args = parser.parse_args()
 
-    tasks = [point_task(), area_task()]
+    tasks = [TASKS[args.task]()]
     if args.dry_run:
         print(json.dumps(tasks, indent=2))
         return
