@@ -8,6 +8,8 @@ import {
   inSelectableArea,
   fetchSlope,
   fallbackAssessment,
+  searchPlaces,
+  SEARCH_MIN_INTERVAL_MS,
   PILOT_SNAP_KM,
   SELECT_RADIUS_KM,
 } from "./api.js";
@@ -49,6 +51,7 @@ const state = {
   loading: null,
   water: null,
   area: null, // data/selectable_area.geojson; null -> fall back to 100 km circles
+  searchBounds: null, // { south, west, north, east } of the green area, limits place search
   pendiente: null, // { pendiente_pct, fuente } or null
   clima: null,
   corregido: false,
@@ -149,6 +152,7 @@ async function initMap() {
     attribution: "&copy; OpenStreetMap",
   }).addTo(map);
   map.on("click", (e) => selectPoint(e.latlng.lat, e.latlng.lng));
+  $("search").addEventListener("submit", onSearch);
   try {
     state.water = await loadJson("data/water_mask.geojson");
   } catch {
@@ -229,8 +233,67 @@ function drawPilotZones(pilots) {
   };
   map.on("zoomend", toggleDots);
   const bounds = L.latLngBounds(rings.flat());
-  if (bounds.isValid()) map.fitBounds(bounds, { padding: [12, 12] });
+  if (bounds.isValid()) {
+    map.fitBounds(bounds, { padding: [12, 12] });
+    state.searchBounds = {
+      south: bounds.getSouth(), west: bounds.getWest(), north: bounds.getNorth(), east: bounds.getEast(),
+    };
+  }
   toggleDots();
+}
+
+// ---- place search (Nominatim) ------------------------------------------
+let lastSearchAt = 0;
+
+function renderSearchResults(places) {
+  const list = $("search-results");
+  list.replaceChildren();
+  // Places inside the green area first; the rest stay listed so the farmer understands why they fail.
+  const ranked = places
+    .map((p) => ({ ...p, inside: !state.area || inSelectableArea(p.lat, p.lon, state.area) }))
+    .sort((a, b) => b.inside - a.inside);
+  for (const p of ranked) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = p.nombre;
+    const detail = document.createElement("small");
+    detail.textContent = [p.detalle, p.inside ? "" : "fuera del área con datos"].filter(Boolean).join(" — ");
+    btn.append(detail);
+    if (!p.inside) btn.classList.add("outside");
+    btn.addEventListener("click", () => {
+      list.replaceChildren();
+      $("search-msg").textContent = "";
+      map.setView([p.lat, p.lon], 13);
+      selectPoint(p.lat, p.lon);
+    });
+    const li = document.createElement("li");
+    li.append(btn);
+    list.append(li);
+  }
+}
+
+async function onSearch(event) {
+  event.preventDefault();
+  const query = $("search-q").value.trim();
+  if (!query) return;
+  const button = $("search").querySelector("button[type=submit]");
+  button.disabled = true;
+  $("search-msg").textContent = "Buscando…";
+  $("search-results").replaceChildren();
+  try {
+    const wait = lastSearchAt + SEARCH_MIN_INTERVAL_MS - Date.now();
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    lastSearchAt = Date.now();
+    const places = await searchPlaces(query, { bounds: state.searchBounds });
+    $("search-msg").textContent = places.length
+      ? "Elija un lugar. Después puede mover el punto tocando el mapa."
+      : "No encontramos ese lugar en las zonas con datos. Pruebe con el nombre del distrito o toque el mapa.";
+    renderSearchResults(places);
+  } catch {
+    $("search-msg").textContent = "No pudimos buscar ahora. Revise su conexión o toque el mapa.";
+  } finally {
+    button.disabled = false;
+  }
 }
 
 // ---- climate + scoring -------------------------------------------------

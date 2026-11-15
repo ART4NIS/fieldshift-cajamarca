@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FieldShift Cajamarca</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="css/styles.css?v=202611142330">
+  <link rel="stylesheet" href="css/styles.css?v=202611150025">
   <!-- Asset version: bump with `npm run bump` before each deploy so cached old modules are never mixed with new ones. -->
   <script type="importmap">
     {
       "imports": {
-        "./js/api.js": "./js/api.js?v=202611142330",
-        "./js/charts.js": "./js/charts.js?v=202611142330",
-        "./js/evidence.js": "./js/evidence.js?v=202611142330",
-        "./js/pisco.js": "./js/pisco.js?v=202611142330",
-        "./js/scoring.js": "./js/scoring.js?v=202611142330"
+        "./js/api.js": "./js/api.js?v=202611150025",
+        "./js/charts.js": "./js/charts.js?v=202611150025",
+        "./js/evidence.js": "./js/evidence.js?v=202611150025",
+        "./js/pisco.js": "./js/pisco.js?v=202611150025",
+        "./js/scoring.js": "./js/scoring.js?v=202611150025"
       }
     }
   </script>
@@ -36,6 +36,15 @@
       <h2>Elija su parcela</h2>
       <p>Elija una zona y marque dónde está su parcela dentro del área verde.</p>
       <div id="pilots" class="chips"></div>
+      <form id="search" class="search" role="search">
+        <label for="search-q">Buscar su pueblo o distrito</label>
+        <div class="search-row">
+          <input id="search-q" type="search" placeholder="Por ejemplo: Baños del Inca" autocomplete="off" required>
+          <button type="submit">Buscar</button>
+        </div>
+        <p id="search-msg" class="search-msg" aria-live="polite"></p>
+        <ul id="search-results" class="search-results"></ul>
+      </form>
       <div id="map" role="application" aria-label="Mapa de la parcela"></div>
       <p class="map-legend">
         <span><span class="swatch swatch-ok" aria-hidden="true"></span> Sierra con datos (sobre 2 500 m)</span>
@@ -92,6 +101,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script type="module" src="js/ui.js?v=202611142330"></script>
+  <script type="module" src="js/ui.js?v=202611150025"></script>
 </body>
 </html>

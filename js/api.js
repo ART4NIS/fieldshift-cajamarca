@@ -283,6 +283,55 @@ export function inSelectableArea(lat, lon, area) {
   return (area?.features ?? []).some((f) => polygonsOf(f.geometry).some((poly) => pointInPolygon(lon, lat, poly)));
 }
 
+const SEARCH_URL = "https://nominatim.openstreetmap.org/search";
+// Nominatim usage policy: at most 1 request per second and no search-as-you-type.
+export const SEARCH_MIN_INTERVAL_MS = 1000;
+
+/**
+ * Nominatim place-search URL restricted to Peru and, when given, to a bounding box
+ * `{ south, west, north, east }` (the selectable area), so a "Cajamarca" elsewhere is never returned.
+ */
+export function buildSearchUrl(query, bounds = null) {
+  const params = { q: query.trim(), format: "jsonv2", countrycodes: "pe", limit: "5", "accept-language": "es" };
+  if (bounds) {
+    params.viewbox = [bounds.west, bounds.north, bounds.east, bounds.south].join(",");
+    params.bounded = "1";
+  }
+  return `${SEARCH_URL}?${new URLSearchParams(params)}`;
+}
+
+// Same name within this distance = the same place (a town and a street inside it, for example).
+const SAME_PLACE_KM = 3;
+
+/**
+ * Nominatim results -> [{ nombre, detalle, lat, lon }]. Entries without valid coordinates are dropped,
+ * and so are repeats of an earlier result.
+ */
+export function parseSearchResults(body) {
+  if (!Array.isArray(body)) return [];
+  const places = body
+    .map((r) => {
+      const parts = String(r.display_name ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+      return {
+        nombre: r.name || parts[0] || "Lugar sin nombre",
+        detalle: parts.slice(1).filter((p) => !/^\d+$/.test(p) && p !== "Perú").join(", "),
+        lat: Number(r.lat),
+        lon: Number(r.lon),
+      };
+    })
+    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+  // A repeat is the same name either close by or with an identical description (a city, its province and
+  // its region all read "Arequipa"): the user could not tell them apart. Nominatim lists the most relevant first.
+  return places.filter((p, i) => !places.slice(0, i).some((q) =>
+    q.nombre === p.nombre && (q.detalle === p.detalle || distanceKm(p.lat, p.lon, q.lat, q.lon) < SAME_PLACE_KM)));
+}
+
+/** Searches places by name; throws on network or HTTP errors so the UI can explain the failure. */
+export async function searchPlaces(query, { bounds = null, fetchImpl = globalThis.fetch } = {}) {
+  if (!query?.trim()) return [];
+  return parseSearchResults(await getJson(buildSearchUrl(query, bounds), fetchImpl));
+}
+
 /** Fallback when the live computation fails: trust the pilot's numbers only if it is close. */
 export function fallbackAssessment(km, pilotName) {
   const near = km <= FALLBACK_TRUST_KM;
