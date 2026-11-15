@@ -6,6 +6,24 @@
     { "id": "cajamarca", "nombre": "Cajamarca", "region": "Cajamarca", "lat": -7.16, "lon": -78.51, "disponible": true },
     { "id": "huancayo", "nombre": "Huancayo", "region": "Junín", "lat": -12.07, "lon": -75.21, "disponible": true },
     { "id": "puno", "nombre": "Puno", "region": "Puno", "lat": -15.84, "lon": -70.02, "disponible": true },
-    { "id": "cusco", "nombre": "Cusco", "region": "Cusco", "lat": -13.52, "lon": -71.97, "disponible": true }
+    { "id": "cusco", "nombre": "Cusco", "region": "Cusco", "lat": -13.52, "lon": -71.97, "disponible": true },
+    { "id": "espinar", "nombre": "Espinar", "region": "Cusco", "lat": -14.79, "lon": -71.41, "disponible": true },
+    { "id": "chalhuanca", "nombre": "Chalhuanca", "region": "Apurímac", "lat": -14.29, "lon": -73.24, "disponible": true },
+    { "id": "cerro_de_pasco", "nombre": "Cerro de Pasco", "region": "Pasco", "lat": -10.68, "lon": -76.26, "disponible": true },
+    { "id": "pomabamba", "nombre": "Pomabamba", "region": "Áncash", "lat": -8.82, "lon": -77.46, "disponible": true },
+    { "id": "ayacucho", "nombre": "Ayacucho", "region": "Ayacucho", "lat": -13.16, "lon": -74.22, "disponible": true },
+    { "id": "macusani", "nombre": "Macusani", "region": "Puno", "lat": -14.07, "lon": -70.43, "disponible": true },
+    { "id": "candarave", "nombre": "Candarave", "region": "Tacna", "lat": -17.27, "lon": -70.25, "disponible": true },
+    { "id": "chivay", "nombre": "Chivay", "region": "Arequipa", "lat": -15.64, "lon": -71.6, "disponible": true },
+    { "id": "coracora", "nombre": "Coracora", "region": "Ayacucho", "lat": -15.02, "lon": -73.78, "disponible": true },
+    { "id": "la_union", "nombre": "La Unión", "region": "Huánuco", "lat": -9.83, "lon": -76.8, "disponible": true },
+    { "id": "yauyos", "nombre": "Yauyos", "region": "Lima", "lat": -12.46, "lon": -75.92, "disponible": true },
+    { "id": "putina", "nombre": "Putina", "region": "Puno", "lat": -14.91, "lon": -69.87, "disponible": true },
+    { "id": "chachapoyas", "nombre": "Chachapoyas", "region": "Amazonas", "lat": -6.23, "lon": -77.87, "disponible": true },
+    { "id": "huancabamba", "nombre": "Huancabamba", "region": "Piura", "lat": -5.24, "lon": -79.45, "disponible": true },
+    { "id": "huamachuco", "nombre": "Huamachuco", "region": "La Libertad", "lat": -7.81, "lon": -78.05, "disponible": true },
+    { "id": "abancay", "nombre": "Abancay", "region": "Apurímac", "lat": -13.64, "lon": -72.88, "disponible": true },
+    { "id": "cotahuasi", "nombre": "Cotahuasi", "region": "Arequipa", "lat": -15.21, "lon": -72.89, "disponible": true },
+    { "id": "huancavelica", "nombre": "Huancavelica", "region": "Huancavelica", "lat": -12.79, "lon": -74.97, "disponible": true }
   ]
 }

@@ -29,8 +29,11 @@ test("unequal cell sizes are used for each axis", () => {
   assert.ok(Math.abs(slopeFromStencilXY(z, 50, 100) - 20) < 1e-9);
 });
 
-test("every pilot center falls in its own SRTM area", () => {
-  for (const p of pilotList) {
+test("every pilot with SRTM data has its center in its own SRTM area", () => {
+  // Pilots added later have no SRTM grid yet; the app falls back to Copernicus 90 m for them.
+  const withSrtm = pilotList.filter((p) => p.id in index.areas);
+  assert.ok(withSrtm.length >= 4);
+  for (const p of withSrtm) {
     const hit = srtmAreaAt(p.lat, p.lon, index);
     assert.ok(hit, `no SRTM area for ${p.id}`);
     assert.equal(hit[0], p.id);
