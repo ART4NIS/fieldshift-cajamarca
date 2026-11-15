@@ -1,3 +1,3 @@
-# Only process_appeears.py needs these (SRTM GeoTIFF). The other scripts use the standard library.
+# Only process_appeears.py and build_dem_grid.py need these (GeoTIFF reading). The other scripts use the standard library.
 numpy>=1.26
 rasterio>=1.3

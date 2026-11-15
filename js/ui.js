@@ -150,12 +150,12 @@ function selectPoint(lat, lon, pilotId = null) {
     $("map-msg").textContent = "Ese punto está sobre un lago. Toque un punto en tierra firme.";
     return;
   }
-  // Selectable area: sierra land (>= 2,500 m) near a pilot. Within 10 km the pilot's own correction is used;
+  // Selectable area: Peru's sierra land (>= 2,500 m). Within 10 km of a pilot its own correction is used;
   // farther out the correction is computed live for the exact point (see ensureClimate).
   // Without the area file, fall back to plain 100 km circles. Pilot chips (pilotId) always work.
   if (!pilotId && state.area && !inSelectableArea(lat, lon, state.area)) {
     $("map-msg").textContent =
-      "Este punto está fuera del área con datos (sierra sobre 2 500 m cerca de las zonas piloto). Elija un punto dentro del área verde.";
+      "Este punto está fuera del área con datos (la sierra del Perú, sobre 2 500 m). Elija un punto dentro del área verde.";
     return;
   }
   const near = nearestPilot(lat, lon, state.pilots, state.area ? Infinity : SELECT_RADIUS_KM);
