@@ -1,11 +1,18 @@
 """Process AppEEARS outputs (MODIS NDVI, SMAP soil moisture, SRTM elevation) into pilot JSON.
 
-Expected input (download every file of both AppEEARS requests into one folder):
+Expected input (download every file of the AppEEARS requests into one folder):
     raw/appeears/
-        fieldshift-ndvi-smap-MOD13Q1-061-results.csv      (point sample, NDVI)
+        fieldshift-ndvi-grid-MOD13Q1-061-results.csv      (point grid, NDVI)
+        fieldshift-ndvi-grid-MCD12Q1-061-results.csv      (point grid, IGBP land cover)
         fieldshift-ndvi-smap-SPL3SMP-E-006-results.csv    (point sample, SMAP)
         SRTMGL1_NC.003_SRTMGL1_DEM_*.tif                  (area sample, GeoTIFF)
 File names may differ: CSVs are recognised by their columns, GeoTIFFs by "SRTMGL1_DEM".
+
+NDVI grid: each pilot has several points around it (Category = pilot id, ID = point id).
+Every point gets its most frequent MCD12Q1 class over the years, and only points classed as
+grassland, cropland or cropland/natural mosaic are pooled into the pilot's NDVI. When a land
+cover file is present, NDVI rows from points without a land cover class (for example the old
+single-point request at each town center) are ignored.
 
 Output: merged into data/pilots/<id>.json under the keys "ndvi", "soil_moisture" and
 "terrain" (other keys such as "climate_bias" are preserved).
@@ -32,12 +39,16 @@ AREAS_GEOJSON = ROOT / "data" / "requests" / "appeears_srtm_areas.geojson"
 
 NDVI_LAYER = "_250m_16_days_ndvi"
 NDVI_RELIABILITY_LAYER = "_250m_16_days_pixel_reliability"
+LAND_COVER_LAYER = "_lc_type1"
 SMAP_LAYER = "soil_moisture_retrieval_data_am_soil_moisture"
 SMAP_QUAL_LAYER = "soil_moisture_retrieval_data_am_retrieval_qual_flag"
 
 # MOD13Q1 pixel reliability: 0 = good, 1 = marginal, 2 = snow/ice, 3 = cloudy, -1 = fill.
 NDVI_GOOD_RELIABILITY = {0, 1}
 NDVI_VALID_RANGE = (-0.2, 1.0)
+NDVI_FILL = -3000.0
+# MCD12Q1 LC_Type1 (IGBP) classes that stand for farmland and pasture in the highlands.
+FARM_AND_PASTURE_CLASSES = {10: "grassland", 12: "cropland", 14: "cropland/natural mosaic"}
 # SPL3SMP_E retrieval_qual_flag bit 0 = 0 means "retrieval recommended".
 SMAP_RECOMMENDED_BIT = 1
 SMAP_VALID_RANGE = (0.0, 0.7)
@@ -120,9 +131,41 @@ def monthly_summary(series: dict[str, list[tuple[date, float]]], digits: int) ->
     return out
 
 
+def pilot_of(row: dict) -> str:
+    """Point-sample CSVs use Category "pilot" and ID = pilot id; grid CSVs use Category = pilot id."""
+    category = row.get("Category", "")
+    return row["ID"] if category in ("", "pilot") else category
+
+
+# ---------------------------------------------------------------- land cover
+
+def process_land_cover(paths: list[Path]) -> dict[str, int]:
+    """Point ID -> most frequent LC_Type1 class across the years (ties go to the latest year)."""
+    by_point: dict[str, list[tuple[str, int]]] = defaultdict(list)
+    for path in paths:
+        header, rows = read_rows(path)
+        col = find_column(header, LAND_COVER_LAYER)
+        for row in rows:
+            value = to_float(row[col])
+            if value is not None:
+                by_point[row["ID"]].append((row["Date"][:10], int(value)))
+
+    modal = {}
+    for point, obs in by_point.items():
+        counts = defaultdict(int)
+        latest: dict[int, str] = {}
+        for day, cls in obs:
+            counts[cls] += 1
+            latest[cls] = max(latest.get(cls, ""), day)
+        modal[point] = max(counts, key=lambda c: (counts[c], latest[c]))
+    kept = sum(1 for c in modal.values() if c in FARM_AND_PASTURE_CLASSES)
+    print(f"  Land cover: {len(modal)} points, {kept} classed as farmland or pasture")
+    return modal
+
+
 # ---------------------------------------------------------------- NDVI / SMAP
 
-def process_ndvi(path: Path) -> dict[str, dict]:
+def process_ndvi(path: Path, land_cover: dict[str, int] | None = None) -> dict[str, dict]:
     header, rows = read_rows(path)
     ndvi_col = find_column(header, NDVI_LAYER)
     rel_col = find_column(header, NDVI_RELIABILITY_LAYER)
@@ -133,11 +176,16 @@ def process_ndvi(path: Path) -> dict[str, dict]:
 
     raw = [to_float(r[ndvi_col]) for r in rows]
     # AppEEARS CSVs normally carry scaled NDVI (-0.2..1); fall back to the 0.0001 scale factor.
-    scale = 0.0001 if any(v is not None and abs(v) > 1.5 for v in raw) else 1.0
+    # The fill value stays unscaled (-3000) even in scaled CSVs, so it must not drive the choice.
+    scale = 0.0001 if any(v is not None and v != NDVI_FILL and abs(v) > 1.5 for v in raw) else 1.0
 
     series: dict[str, list[tuple[date, float]]] = defaultdict(list)
-    dropped = 0
+    points: dict[str, set[str]] = defaultdict(set)
+    dropped = other_cover = 0
     for row, value in zip(rows, raw):
+        if land_cover is not None and land_cover.get(row["ID"]) not in FARM_AND_PASTURE_CLASSES:
+            other_cover += 1
+            continue
         reliability = to_float(row[rel_col]) if rel_col else 0
         if value is None or reliability is None or int(reliability) not in NDVI_GOOD_RELIABILITY:
             dropped += 1
@@ -146,18 +194,32 @@ def process_ndvi(path: Path) -> dict[str, dict]:
         if not NDVI_VALID_RANGE[0] <= value <= NDVI_VALID_RANGE[1]:
             dropped += 1
             continue
-        series[row["ID"]].append((date.fromisoformat(row["Date"][:10]), value))
-    print(f"  NDVI: kept {sum(len(v) for v in series.values())} observations, dropped {dropped} (cloud/fill)")
+        pilot = pilot_of(row)
+        series[pilot].append((date.fromisoformat(row["Date"][:10]), value))
+        points[pilot].add(row["ID"])
+    print(
+        f"  NDVI: kept {sum(len(v) for v in series.values())} observations, dropped {dropped} (cloud/fill)"
+        + (f", skipped {other_cover} from other land cover" if land_cover is not None else "")
+    )
 
     result = monthly_summary(series, digits=3)
-    for block in result.values():
+    for pilot, block in result.items():
         block.update(
             {
                 "fuente": "MODIS MOD13Q1.061 (250 m, 16 days) via NASA AppEEARS",
                 "filtro": "pixel_reliability 0-1 (good/marginal)",
                 "unidad": "NDVI (-1 a 1)",
+                "n_puntos": len(points[pilot]),
             }
         )
+        if land_cover is not None:
+            classes = defaultdict(int)
+            for point in points[pilot]:
+                classes[FARM_AND_PASTURE_CLASSES[land_cover[point]]] += 1
+            block["cobertura"] = {
+                "fuente": "MODIS MCD12Q1.061 LC_Type1 (IGBP, 500 m), most frequent class per point",
+                "puntos_por_clase": dict(sorted(classes.items())),
+            }
     return result
 
 
@@ -274,15 +336,17 @@ def process_srtm(tifs: list[Path]) -> dict[str, dict]:
 
 # ---------------------------------------------------------------- main
 
-def classify_csvs(folder: Path) -> tuple[list[Path], list[Path]]:
-    ndvi, smap = [], []
+def classify_csvs(folder: Path) -> tuple[list[Path], list[Path], list[Path]]:
+    ndvi, smap, land_cover = [], [], []
     for path in sorted(folder.rglob("*.csv")):
         header, _ = read_rows(path) if path.stat().st_size < 200_000_000 else ([], [])
         if find_column(header, NDVI_LAYER):
             ndvi.append(path)
         elif find_column(header, SMAP_LAYER):
             smap.append(path)
-    return ndvi, smap
+        elif find_column(header, LAND_COVER_LAYER):
+            land_cover.append(path)
+    return ndvi, smap, land_cover
 
 
 def merge_into_pilots(sections: dict[str, dict[str, dict]]) -> list[str]:
@@ -306,13 +370,17 @@ def main() -> None:
     if not args.input.is_dir():
         raise SystemExit(f"Input folder not found: {args.input}")
 
-    ndvi_files, smap_files = classify_csvs(args.input)
+    ndvi_files, smap_files, lc_files = classify_csvs(args.input)
     tifs = sorted(p for p in args.input.rglob("*.tif") if "SRTMGL1_DEM" in p.name)
-    print(f"Found {len(ndvi_files)} NDVI CSV, {len(smap_files)} SMAP CSV, {len(tifs)} SRTM GeoTIFF")
+    print(
+        f"Found {len(ndvi_files)} NDVI CSV, {len(lc_files)} land cover CSV, "
+        f"{len(smap_files)} SMAP CSV, {len(tifs)} SRTM GeoTIFF"
+    )
 
+    land_cover = process_land_cover(lc_files) if lc_files else None
     sections: dict[str, dict[str, dict]] = {}
     for path in ndvi_files:
-        sections.setdefault("ndvi", {}).update(process_ndvi(path))
+        sections.setdefault("ndvi", {}).update(process_ndvi(path, land_cover))
     for path in smap_files:
         sections.setdefault("soil_moisture", {}).update(process_smap(path))
     if tifs:
