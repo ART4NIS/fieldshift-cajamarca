@@ -40,11 +40,11 @@ const ZONE_ZOOM = 8;
 const FALLBACK_PILOTS =[{ id: "cajamarca", nombre: "Cajamarca", lat: -7.16, lon: -78.51 }];
 
 const SLIDER_LABELS = {
-  agua: ["Ahorrar agua", "Cultivos que necesitan menos lluvia o riego"],
-  suelo: ["Cuidar el suelo", "Mantener la tierra fértil entre campañas"],
-  erosion: ["Evitar que se lave la tierra", "Proteger las laderas de la erosión"],
-  forraje: ["Pasto para animales", "Tener alimento para el ganado"],
-  clima: ["Evitar heladas y sequía", "Menor riesgo por el clima"],
+  agua: ["Save water", "Crops that need less rain or irrigation"],
+  suelo: ["Care for the soil", "Keep the soil fertile between growing seasons"],
+  erosion: ["Prevent soil loss", "Protect slopes from erosion"],
+  forraje: ["Feed for livestock", "Provide feed for livestock"],
+  clima: ["Reduce frost and drought risk", "Lower climate risk"],
 };
 
 const $ = (id) => document.getElementById(id);
@@ -58,7 +58,7 @@ const state = {
   pendiente: null, // { pendiente_pct, fuente } or null
   clima: null,
   corregido: false,
-  fuente: "No informada",
+  fuente: "Not reported",
   periodoCorreccion: null,
   fichas: null,
   srtm: null, // data/srtm/index.json: NASA SRTM 30 m grids around the pilots
@@ -143,28 +143,28 @@ async function loadPilots() {
 function coordsText() {
   const { lat, lon, pilotId, km, mode } = state.parcela;
   const name = state.pilots.find((p) => p.id === pilotId)?.nombre ?? pilotId;
-  const base = `Latitud ${lat.toFixed(4)}, longitud ${lon.toFixed(4)}. `;
-  if (mode === "pilot") return `${base}Se usan los datos locales del punto piloto ${name}.`;
-  if (mode === "fallback") return `${base}Se usa la corrección del punto piloto ${name}, a ${Math.round(km)} km.`;
-  return `${base}Se usará una corrección local calculada para este punto.`;
+  const base = `Latitude ${lat.toFixed(4)}, longitude ${lon.toFixed(4)}. `;
+  if (mode === "pilot") return `${base}Using local data from the ${name} pilot site.`;
+  if (mode === "fallback") return `${base}Using the correction from the ${name} pilot site, ${Math.round(km)} km away.`;
+  return `${base}A local correction will be calculated for this point.`;
 }
 
 function selectPoint(lat, lon, pilotId = null) {
   // A new point (map click in step 2 on wide screens) goes back to step 1, where its messages are shown.
   setStage("place");
   if (state.loading) {
-    $("map-msg").textContent = "Espere un momento: todavía estamos calculando el clima del punto anterior.";
+    $("map-msg").textContent = "Please wait: we are still calculating the climate for the previous point.";
     return;
   }
   if (lat > LAT_MAX || lat < LAT_MIN) {
-    $("map-msg").textContent = "Este punto está fuera de la zona andina del Perú que cubre la herramienta (latitud entre -6 y -16).";
+    $("map-msg").textContent = "This point is outside the Peruvian Andean area covered by the tool (latitude between -6 and -16).";
     $("to-prioridades").disabled = true;
     $("cta-hint").hidden = false;
     state.parcela = null;
     return;
   }
   if (isOnWater(lat, lon, state.water)) {
-    $("map-msg").textContent = "Ese punto está sobre un lago. Toque un punto en tierra firme.";
+    $("map-msg").textContent = "That point is on a lake. Tap a point on land.";
     return;
   }
   // Selectable area: Peru's sierra land (>= 2,500 m). Within 10 km of a pilot its own correction is used;
@@ -172,12 +172,12 @@ function selectPoint(lat, lon, pilotId = null) {
   // Without the area file, fall back to plain 100 km circles. Pilot chips (pilotId) always work.
   if (!pilotId && state.area && !inSelectableArea(lat, lon, state.area)) {
     $("map-msg").textContent =
-      "Este punto está fuera del área con datos (la sierra del Perú, sobre 2 500 m). Elija un punto dentro del área verde.";
+      "This point is outside the data coverage area (Peruvian highlands above 2,500 m). Choose a point within the green zone.";
     return;
   }
   const near = nearestPilot(lat, lon, state.pilots, state.area ? Infinity : SELECT_RADIUS_KM);
   if (!near && !pilotId) {
-    $("map-msg").textContent = "Todavía no tenemos datos para esta zona. Elija un punto dentro del área verde.";
+    $("map-msg").textContent = "We do not yet have data for this area. Choose a point within the green zone.";
     return;
   }
   const chosen = pilotId ? state.pilots.find((p) => p.id === pilotId) : near;
@@ -215,16 +215,16 @@ async function initMap() {
       // "Map data not yet available" placeholder, so upscale level 17 instead.
       maxNativeZoom: 17,
       maxZoom: 19,
-      attribution: "Imágenes &copy; Esri, Maxar, Earthstar Geographics y la comunidad de usuarios de GIS",
+      attribution: "Imagery &copy; Esri, Maxar, Earthstar Geographics and the GIS user community",
     },
   ).addTo(map);
   const labels = L.tileLayer(
     "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-    { maxZoom: 19, pane: "labels", attribution: "Nombres &copy; Esri" },
+    { maxZoom: 19, pane: "labels", attribution: "Labels &copy; Esri" },
   ).addTo(map);
   const blueMarble = L.tileLayer(
     "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg",
-    { maxNativeZoom: 8, maxZoom: 19, attribution: "Imagen: NASA Blue Marble (GIBS)" },
+    { maxNativeZoom: 8, maxZoom: 19, attribution: "Imagery: NASA Blue Marble (GIBS)" },
   );
   const streets = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -232,8 +232,8 @@ async function initMap() {
   });
   L.control
     .layers(
-      { "Satélite": satellite, "NASA Blue Marble": blueMarble, "Mapa de calles": streets },
-      { "Nombres de lugares": labels },
+      { "Satellite": satellite, "NASA Blue Marble": blueMarble, "Street map": streets },
+      { "Place labels": labels },
       { position: "bottomright" },
     )
     .addTo(map);
@@ -344,7 +344,7 @@ function renderSearchResults(places) {
     btn.type = "button";
     btn.textContent = p.nombre;
     const detail = document.createElement("small");
-    detail.textContent = [p.detalle, p.inside ? "" : "fuera del área con datos"].filter(Boolean).join(" — ");
+    detail.textContent = [p.detalle, p.inside ? "" : "outside the data coverage area"].filter(Boolean).join(" — ");
     btn.append(detail);
     if (!p.inside) btn.classList.add("outside");
     btn.addEventListener("click", () => {
@@ -365,7 +365,7 @@ async function onSearch(event) {
   if (!query) return;
   const button = $("search").querySelector("button[type=submit]");
   button.disabled = true;
-  $("search-msg").textContent = "Buscando…";
+  $("search-msg").textContent = "Searching…";
   $("search-results").replaceChildren();
   try {
     const wait = lastSearchAt + SEARCH_MIN_INTERVAL_MS - Date.now();
@@ -373,11 +373,11 @@ async function onSearch(event) {
     lastSearchAt = Date.now();
     const places = await searchPlaces(query, { bounds: state.searchBounds });
     $("search-msg").textContent = places.length
-      ? "Elija un lugar. Después puede mover el punto tocando el mapa."
-      : "No encontramos ese lugar en las zonas con datos. Pruebe con el nombre del distrito o toque el mapa.";
+      ? "Choose a place. You can then move the point by tapping the map."
+      : "We could not find that place in the coverage area. Try the district name or tap the map.";
     renderSearchResults(places);
   } catch {
-    $("search-msg").textContent = "No pudimos buscar ahora. Revise su conexión o toque el mapa.";
+    $("search-msg").textContent = "Search is unavailable. Check your connection or tap the map.";
   } finally {
     button.disabled = false;
   }
@@ -418,10 +418,10 @@ async function loadClimate() {
   // Slope runs in parallel with the climate request (pointSlope never rejects: null on failure).
   const slopePromise = pointSlope(p);
   if (p.mode === "live") {
-    setStatus("Calculando la corrección local para su punto (puede tardar hasta un minuto la primera vez)...");
+    setStatus("Calculating the local correction for your point (this may take up to a minute the first time)...");
     try {
       const { bias } = await getLocalBias(p.lat, p.lon, { timeoutMs: LIVE_TIMEOUT_MS });
-      options = { climateBias: bias, fuenteCorreccion: "con corrección local calculada para este punto (SENAMHI PISCO)" };
+      options = { climateBias: bias, fuenteCorreccion: "with a local correction calculated for this point (SENAMHI PISCO)" };
     } catch {
       const fa = fallbackAssessment(p.km, pilotName);
       p.mode = "fallback";
@@ -430,7 +430,7 @@ async function loadClimate() {
       $("coords").textContent = coordsText();
     }
   } else {
-    setStatus("Cargando el clima de su parcela...");
+    setStatus("Loading climate data for your plot...");
   }
   try {
     const res = await fetchClimate(p.lat, p.lon, options);
@@ -440,11 +440,11 @@ async function loadClimate() {
     state.periodoCorreccion = res.periodoCorreccion;
     state.pendiente = await slopePromise;
     const alt = checkAltitude(res.elevation);
-    const status = alt.ok ? "" : `${alt.mensaje} (Fuente: ${res.elevationSource})`;
+    const status = alt.ok ? "" : `${alt.mensaje} (Source: ${res.elevationSource})`;
     setStatus([state.aviso, status].filter(Boolean).join(" "));
     return true;
   } catch {
-    setStatus("No pudimos obtener el clima de este punto. Intente de nuevo o elija otro punto.");
+    setStatus("We could not retrieve climate data for this point. Try again or choose another point.");
     return false;
   }
 }
@@ -523,13 +523,13 @@ function buildFichas() {
   return { results, fichas, shared };
 }
 
-/** Notes that apply to every card: shown once in "Antes de sembrar" and once in the PDF. */
+/** Notes that apply to every card: shown once in "Before planting" and once in the PDF. */
 function commonNotes(shared) {
   return [
     ...(state.pendiente ? [slopeSentence(state.pendiente)] : []),
     ...(zoneNote() ? [zoneNote()] : []),
     ...(shared.includes(AVISO_DATOS_ESTIMADOS)
-      ? ["Los datos de los cultivos son estimaciones de estudios publicados, todavía sin validar en campo."]
+      ? ["Crop parameters are estimates from published studies and have not yet been validated in the field."]
       : []),
     ...(state.aviso ? [state.aviso] : []),
     ...shared.filter((a) => a !== AVISO_SIN_CORRECCION && a !== AVISO_DATOS_ESTIMADOS),
@@ -540,7 +540,7 @@ function placeText() {
   if (!state.parcela) return "";
   const { lat, lon, pilotId } = state.parcela;
   const name = state.pilots.find((p) => p.id === pilotId)?.nombre ?? pilotId;
-  return `Zona de ${name} · latitud ${lat.toFixed(4)}, longitud ${lon.toFixed(4)}`;
+  return `${name} area · latitude ${lat.toFixed(4)}, longitude ${lon.toFixed(4)}`;
 }
 
 function renderResults() {
@@ -610,37 +610,37 @@ function toast(text) {
 }
 
 async function downloadPdf(fichas, shared) {
-  toast("Preparando el PDF…");
+  toast("Preparing the PDF…");
   try {
     await exportarPdf(fichas, {
       lugar: placeText(),
-      fecha: new Date().toLocaleDateString("es-PE", { year: "numeric", month: "long", day: "numeric" }),
+      fecha: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
       comunes: commonNotes(shared),
     });
-    toast(fichas.length === 1 ? "Ficha descargada." : "Fichas descargadas.");
+    toast(fichas.length === 1 ? "Report downloaded." : "Reports downloaded.");
   } catch {
-    toast("No pudimos crear el PDF. Revise su conexión e intente de nuevo.");
+    toast("We could not create the PDF. Check your connection and try again.");
   }
 }
 
 /** Plain-language class: < 8 % gentle, 8-20 % moderate, > 20 % steep. */
 function slopeClass(pct) {
-  if (pct < 8) return "suave";
-  if (pct <= 20) return "moderada";
-  return "fuerte";
+  if (pct < 8) return "gentle";
+  if (pct <= 20) return "moderate";
+  return "steep";
 }
 
 /** Plain sentence for the slope, saying where it was measured. */
 function slopeSentence(pendiente) {
   const pct = Math.round(pendiente.pendiente_pct);
   if (pendiente.zona) {
-    return `No pudimos medir la pendiente justo en su punto; en la zona del piloto la pendiente típica es ${pct} % ` +
+    return `We could not measure slope at your exact point; the typical slope in the pilot area is ${pct} % ` +
       `(${slopeClass(pct)}).`;
   }
   const origen = pendiente.fuente?.startsWith(SRTM_FUENTE)
-    ? "medida con el satélite SRTM de la NASA (30 m)"
-    : "estimada con el modelo de terreno Copernicus (90 m)";
-  return `Pendiente del terreno en su punto: ${pct} % (${slopeClass(pct)}), ${origen}.`;
+    ? "measured using NASA SRTM (30 m)"
+    : "estimated using the Copernicus terrain model (90 m)";
+  return `Terrain slope at your point: ${pct} % (${slopeClass(pct)}), ${origen}.`;
 }
 
 // ---- priorities --------------------------------------------------------
@@ -677,17 +677,17 @@ function renderGlossary() {
   const found = filtrarGlosario(state.glosario, { texto, categoria });
   const box = $("glossary");
   $("glossary-count").textContent = texto || categoria
-    ? `${found.length} ${found.length === 1 ? "palabra encontrada" : "palabras encontradas"}`
-    : `${found.length} palabras en ${CATEGORIAS.length} temas`;
+    ? `${found.length} ${found.length === 1 ? "term found" : "terms found"}`
+    : `${found.length} terms across ${CATEGORIAS.length} topics`;
   if (!found.length) {
     const empty = document.createElement("div");
     empty.className = "empty";
     const p = document.createElement("p");
-    p.textContent = "No encontramos esa palabra. Pruebe con otra o quite el filtro.";
+    p.textContent = "No matching term found. Try another word or remove the filter.";
     const reset = document.createElement("button");
     reset.type = "button";
     reset.className = "btn btn-ghost";
-    reset.textContent = "Ver todas las palabras";
+    reset.textContent = "View all terms";
     reset.addEventListener("click", () => {
       state.glosarioFiltro = { texto: "", categoria: null };
       $("glossary-q").value = "";
@@ -740,7 +740,7 @@ function renderGlossaryCats() {
   };
   const used = new Set(state.glosario.map((t) => t.categoria));
   $("glossary-cats").replaceChildren(
-    make(null, "Todos"),
+    make(null, "All"),
     ...CATEGORIAS.filter((c) => used.has(c.id)).map((c) => make(c.id, c.nombre)),
   );
 }
@@ -761,18 +761,18 @@ async function initGlossary() {
     renderGlossaryCats();
     renderGlossary();
   } catch {
-    $("glossary").textContent = "No pudimos cargar el glosario. Recargue la página.";
+    $("glossary").textContent = "We could not load the glossary. Reload the page.";
   }
 }
 
 // ---- theme ---------------------------------------------------------------
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  const next = theme === "dark" ? "claro" : "oscuro";
+  const next = theme === "dark" ? "light" : "dark";
   const btn = $("theme-toggle");
   btn.replaceChildren(icon(theme === "dark" ? "sun" : "moon", 20));
-  btn.setAttribute("aria-label", `Cambiar a modo ${next}`);
-  btn.title = `Cambiar a modo ${next}`;
+  btn.setAttribute("aria-label", `Switch to ${next} mode`);
+  btn.title = `Switch to ${next} mode`;
 }
 
 function initTheme() {
@@ -812,7 +812,7 @@ async function finishSplash(startedAt) {
 /** Runs the climate request behind the results loader; the steps tick while it works. */
 async function generateResults() {
   if (!state.parcela) {
-    $("map-msg").textContent = "Primero elija un punto en el mapa.";
+    $("map-msg").textContent = "First choose a point on the map.";
     return;
   }
   const loader = $("results-loader");
@@ -888,7 +888,7 @@ async function main() {
     state.cultivos = c.cultivos;
     state.rotaciones = r.rotaciones;
   } catch {
-    $("map-msg").textContent = "No pudimos cargar los datos de la herramienta. Recargue la página.";
+    $("map-msg").textContent = "We could not load the tool data. Reload the page.";
   }
   try {
     await initMap();

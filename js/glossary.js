@@ -2,14 +2,14 @@
 
 /** Display order of the categories; each term in glosario.json names one in its `categoria` field. */
 export const CATEGORIAS = [
-  { id: "clima", nombre: "Clima y riesgos" },
-  { id: "suelo", nombre: "Suelo y cultivos" },
-  { id: "resultados", nombre: "Cómo leer los resultados" },
-  { id: "datos", nombre: "Datos y fuentes" },
-  { id: "mapa", nombre: "Mapa y ubicación" },
+  { id: "clima", nombre: "Climate and risks" },
+  { id: "suelo", nombre: "Soil and crops" },
+  { id: "resultados", nombre: "Understanding results" },
+  { id: "datos", nombre: "Data and sources" },
+  { id: "mapa", nombre: "Map and location" },
 ];
 
-const OTROS = { id: "otros", nombre: "Otros términos" };
+const OTROS = { id: "otros", nombre: "Other terms" };
 
 /** Lowercase without accents, so "sequia" finds "Sequía". */
 export function normalizar(texto) {

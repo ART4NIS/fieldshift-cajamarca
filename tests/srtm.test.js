@@ -90,7 +90,7 @@ test("zone slope and steep-land note come from the pilot SRTM statistics", () =>
   const z = zoneSlope(terrain);
   assert.equal(z.pendiente_pct, terrain.pendiente_pct.mediana);
   assert.equal(z.zona, true);
-  assert.match(zoneSteepNote(terrain, "Cusco"), /Cusco, una buena parte del terreno \(\d+ %\) son laderas fuertes/);
+  assert.match(zoneSteepNote(terrain, "Cusco"), /Cusco pilot site, a substantial share of the terrain \(\d+ %\) consists of steep slopes/);
   assert.equal(zoneSlope(null), null);
   assert.equal(zoneSteepNote({}, "Cusco"), null);
 });

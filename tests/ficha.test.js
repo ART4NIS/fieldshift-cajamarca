@@ -34,7 +34,7 @@ test("confidence maps to green, yellow and red classes", () => {
 });
 
 test("criterion scores get one plain word", () => {
-  assert.deepEqual([80, 60, 45, 10].map(palabraValor), ["Muy bueno", "Bueno", "Regular", "Bajo"]);
+  assert.deepEqual([80, 60, 45, 10].map(palabraValor), ["Very good", "Good", "Fair", "Low"]);
 });
 
 test("every card has the four years, five criteria and its evidence", () => {
@@ -52,9 +52,9 @@ test("every card has the four years, five criteria and its evidence", () => {
 test("a fallow year is shown as rest, not as an unknown crop", () => {
   const tradicional = fichas.find((f) => f.id === "A");
   assert.deepEqual(tradicional.anios.at(-1), {
-    anio: 4, id: "descanso", nombre: "Descanso", descanso: true, detalle: "La tierra descansa", rasgos: [],
+    anio: 4, id: "descanso", nombre: "Fallow", descanso: true, detalle: "The land rests", rasgos: [],
   });
-  assert.equal(tradicional.secuencia, "Papa → Maíz → Trigo → Descanso");
+  assert.equal(tradicional.secuencia, "Potato → Maize → Wheat → Fallow");
 });
 
 test("every crop and the fallow year have a reference photo with attribution", () => {
@@ -67,28 +67,28 @@ test("every crop and the fallow year have a reference photo with attribution", (
 });
 
 test("the summary names the best option and compares with the other rotations", () => {
-  assert.match(fichas[0].resumen[0], /mejor encaja/);
-  assert.match(fichas[1].resumen[0], /por debajo de la mejor opción|igual de bien/);
+  assert.match(fichas[0].resumen[0], /best matches/);
+  assert.match(fichas[1].resumen[0], /below the best option|as well as/);
   const aguaEficiente = fichas.find((f) => f.id === "C");
-  assert.ok(!aguaEficiente.resumen.join(" ").includes("pide más agua"), "the low-water rotation is not called thirsty");
+  assert.ok(!aguaEficiente.resumen.join(" ").includes("it needs more water"), "the low-water rotation is not called thirsty");
 });
 
 test("the summary flags a criterion the user cares about when it scores low", () => {
   const frases = resumenSimple({ total: 50, criterios: { agua: 30, suelo: 80, erosion: 70, forraje: 60, clima: 60 } }, { agua: 5 });
-  assert.ok(frases.some((f) => f.includes("ahorro de agua") && f.includes("muy importante")));
+  assert.ok(frases.some((f) => f.includes("water savings") && f.includes("very important")));
 });
 
 test("crop tags describe what the crop brings", () => {
   const rasgos = (id) => rasgosCultivo(cultivos.find((c) => c.id === id));
-  assert.ok(rasgos("haba").includes("Abona la tierra"));
-  assert.ok(rasgos("tarwi").includes("Aguanta la sequía"));
-  assert.ok(rasgos("papa").includes("Sensible a las heladas"));
+  assert.ok(rasgos("haba").includes("Enriches the soil"));
+  assert.ok(rasgos("tarwi").includes("Drought tolerant"));
+  assert.ok(rasgos("papa").includes("Frost sensitive"));
 });
 
 test("technical detail carries exact figures and the plain card does not defer to a technician", () => {
   const f = fichas[0];
-  assert.ok(f.detalleTecnico.some((t) => t.startsWith("Pendiente: 2 %")));
-  assert.ok(f.resumen.every((t) => !t.includes("técnico")));
+  assert.ok(f.detalleTecnico.some((t) => t.startsWith("Slope: 2 %")));
+  assert.ok(f.resumen.every((t) => !t.includes("advisor")));
 });
 
 test("missing evidence file still yields a usable card", () => {
@@ -100,6 +100,6 @@ test("missing evidence file still yields a usable card", () => {
 
 test("PDF text keeps Spanish accents and replaces characters outside Latin-1", () => {
   assert.equal(pdfText("Papa → Maíz – 2 °C… ≥ 5"), "Papa > Maíz - 2 °C... >= 5");
-  assert.equal(nombreArchivo([{ id: "B" }]), "soworbit-rotacion-b.pdf");
-  assert.equal(nombreArchivo([{ id: "A" }, { id: "B" }]), "soworbit-rotaciones.pdf");
+  assert.equal(nombreArchivo([{ id: "B" }]), "soworbit-rotation-b.pdf");
+  assert.equal(nombreArchivo([{ id: "A" }, { id: "B" }]), "soworbit-rotations.pdf");
 });

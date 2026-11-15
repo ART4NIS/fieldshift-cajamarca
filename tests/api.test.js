@@ -121,7 +121,7 @@ test("fetchClimate falls back to the cache when POWER fails", async () => {
   assert.equal(res.elevation, 2750);
   assert.match(res.elevationSource, /POWER/);
   assert.equal(res.corregido, true);
-  assert.match(res.fuente, /copia guardada/);
+  assert.match(res.fuente, /cached copy/);
 });
 
 test("fetchClimate prefers Open-Meteo elevation over the POWER cell", async () => {

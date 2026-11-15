@@ -12,19 +12,19 @@ test("every glossary term belongs to a known category", () => {
 
 test("search ignores accents and capital letters", () => {
   assert.equal(normalizar("  Sequía "), "sequia");
-  const found = filtrarGlosario(terminos, { texto: "SEQUIA" }).map((t) => t.termino);
-  assert.ok(found.includes("Sequía"));
+  const found = filtrarGlosario(terminos, { texto: "DROUGHT" }).map((t) => t.termino);
+  assert.ok(found.includes("Drought"));
 });
 
 test("search also looks inside the definitions", () => {
   const found = filtrarGlosario(terminos, { texto: "greenwich" }).map((t) => t.termino);
-  assert.deepEqual(found, ["Longitud"]);
+  assert.deepEqual(found, ["Longitude"]);
 });
 
 test("category filter and search text combine", () => {
   const clima = filtrarGlosario(terminos, { categoria: "clima" });
   assert.ok(clima.length > 0 && clima.every((t) => t.categoria === "clima"));
-  assert.deepEqual(filtrarGlosario(terminos, { categoria: "mapa", texto: "helada" }), []);
+  assert.deepEqual(filtrarGlosario(terminos, { categoria: "mapa", texto: "frost" }), []);
 });
 
 test("groups follow the category order, keep every term and drop empty groups", () => {

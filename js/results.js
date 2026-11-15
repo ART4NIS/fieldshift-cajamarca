@@ -91,7 +91,7 @@ function confidencePill(confianza) {
   return h("span", { class: `conf conf-${confianza.clase}` }, h("span", { class: "conf-dot", "aria-hidden": "true" }), confianza.texto);
 }
 
-const rankLabel = (f) => (f.posicion === 0 ? "Mejor opción" : `Opción ${f.posicion + 1}`);
+const rankLabel = (f) => (f.posicion === 0 ? "Best option" : `Option ${f.posicion + 1}`);
 
 /** One selectable card of the left column. */
 function rotationCard(f, { selected, images, onSelect, index }) {
@@ -138,7 +138,7 @@ function criteriaBars(f) {
       h("span", { class: "bar-icon" }, icon(CRITERIO_ICON[c.id] ?? "check", 18)),
       h("div", { class: "bar-main" },
         h("div", { class: "bar-head" },
-          h("span", { class: "bar-label" }, c.label, c.importante && h("span", { class: "tag tag-accent", text: "Importante para usted" })),
+          h("span", { class: "bar-label" }, c.label, c.importante && h("span", { class: "tag tag-accent", text: "Important to you" })),
           h("span", { class: "bar-value" }, h("span", { class: "bar-word", text: c.palabra }), h("b", { text: `${c.valor} %` }))),
         h("div", { class: "bar-track", role: "img", "aria-label": `${c.label}: ${c.valor} %, ${c.palabra.toLowerCase()}` }, fill)));
   }));
@@ -149,9 +149,9 @@ function sources(f, images) {
   return h("div", {},
     f.fuentes.map((s) => h("div", { class: "source" },
       h("a", { href: s.url, target: "_blank", rel: "noopener noreferrer", text: `${s.institucion}: ${s.titulo}` }),
-      h("p", { text: `${s.seccion}. ${s.alcance} Consultado: ${s.consultado}.` }))),
+      h("p", { text: `${s.seccion}. ${s.alcance} Accessed: ${s.consultado}.` }))),
     used.length > 0 && h("div", { class: "source" },
-      h("p", { class: "source-title", text: "Fotos de referencia (Wikimedia Commons)" }),
+      h("p", { class: "source-title", text: "Reference photos (Wikimedia Commons)" }),
       h("p", {}, used.flatMap(({ meta }, i) => [
         i > 0 && " · ",
         h("a", { href: meta.pagina, target: "_blank", rel: "noopener noreferrer", text: `${meta.alt}: ${meta.autor}, ${meta.licencia}` }),
@@ -165,27 +165,27 @@ function sources(f, images) {
 function rotationDetail(f, { images, onExport }) {
   const number = h("b", { text: "0" });
   countUp(number, f.porcentaje);
-  const riskCanvas = h("canvas", { "aria-label": "Gráfico de riesgos del clima por mes", role: "img" });
-  const radarCanvas = h("canvas", { "aria-label": "Gráfico que compara las tres rotaciones", role: "img" });
+  const riskCanvas = h("canvas", { "aria-label": "Monthly climate risk chart", role: "img" });
+  const radarCanvas = h("canvas", { "aria-label": "Chart comparing the three rotations", role: "img" });
 
   const el = h("article", { class: "detail", "aria-labelledby": `tab-${f.id}` },
     h("header", { class: "detail-hero reveal", style: "--i:0" },
       h("div", { class: "hero-score" },
         scoreRing(f.porcentaje, 148),
-        h("div", { class: "hero-score-num" }, h("span", {}, number, h("small", { text: "%" })), h("em", { text: "encaja con sus prioridades" }))),
+        h("div", { class: "hero-score-num" }, h("span", {}, number, h("small", { text: "%" })), h("em", { text: "matches your priorities" }))),
       h("div", { class: "hero-text" },
-        h("p", { class: "eyebrow", text: `Rotación ${f.id} · ${rankLabel(f)}` }),
+        h("p", { class: "eyebrow", text: `Rotation ${f.id} · ${rankLabel(f)}` }),
         h("h3", { text: f.nombre }),
         h("p", { class: "lead", text: f.resumen[0] }),
         f.resumen.slice(1).map((t) => h("p", { text: t })),
         h("div", { class: "conf-row" }, confidencePill(f.confianza), h("span", { class: "conf-why", text: f.confianza.explicacion })))),
 
     h("section", { class: "block reveal", style: "--i:1" },
-      h("h4", { text: "La rotación, año por año" }),
+      h("h4", { text: "The rotation, year by year" }),
       h("ol", { class: "years" }, f.anios.map((a, i) => h("li", { class: "year", style: `--i:${i}` },
         cropPhoto(a, images),
         h("div", { class: "year-body" },
-          h("span", { class: "year-n", text: `Año ${a.anio}` }),
+          h("span", { class: "year-n", text: `Year ${a.anio}` }),
           h("span", { class: "year-name", text: a.nombre }),
           h("span", { class: "year-detail", text: a.detalle }),
           a.rasgos.length > 0 && h("span", { class: "year-tags" }, a.rasgos.map((r) => h("span", { class: "tag", text: r }))))))),
@@ -193,40 +193,40 @@ function rotationDetail(f, { images, onExport }) {
 
     h("div", { class: "stats-grid" },
       h("section", { class: "block reveal", style: "--i:2" },
-        h("h4", { text: "Cómo le va en cada cosa" }),
-        h("p", { class: "hint", text: "Más cerca de 100 % es mejor." }),
+        h("h4", { text: "Performance by criterion" }),
+        h("p", { class: "hint", text: "Closer to 100 % is better." }),
         criteriaBars(f)),
       h("section", { class: "block reveal", style: "--i:3" },
-        h("h4", { text: "Frente a las otras rotaciones" }),
-        h("p", { class: "hint", text: "La figura resaltada es esta rotación; cuanto más grande, mejor." }),
+        h("h4", { text: "Compared with the other rotations" }),
+        h("p", { class: "hint", text: "The highlighted shape is this rotation; larger is better." }),
         h("div", { class: "chart-wrap chart-radar" }, radarCanvas))),
 
     h("section", { class: "block reveal", style: "--i:4" },
-      h("h4", { text: "Riesgos del clima, mes por mes" }),
-      h("p", { class: "hint", text: "Las barras más marcadas son los meses en que esta rotación tiene cultivos en el campo." }),
+      h("h4", { text: "Climate risks, month by month" }),
+      h("p", { class: "hint", text: "Highlighted bars mark months when this rotation has crops in the field." }),
       h("div", { class: "chart-wrap" }, riskCanvas)),
 
     f.avisos.length > 0 && h("section", { class: "block block-alert reveal", style: "--i:5" },
-      h("h4", {}, icon("alert", 18), "Cuidado con las heladas"),
+      h("h4", {}, icon("alert", 18), "Watch for frost"),
       list(f.avisos)),
 
     h("section", { class: "accs reveal", style: "--i:6" },
       f.evidenciaDisponible
         ? [
-          accordion("¿Por qué considerarla?", [
+          accordion("Why consider it?", [
             h("p", { text: f.porQue }),
             f.beneficios.map((b) => h("p", {}, b.texto, " ", h("span", { class: "cite", text: `Respaldo: ${b.instituciones.join("; ")}` }))),
           ]),
-          accordion("Límites y lo que falta saber", [list(f.limites), list(f.faltantes)]),
-          accordion("Preguntas para revisar en su parcela", list(f.revisar)),
+          accordion("Limitations and missing information", [list(f.limites), list(f.faltantes)]),
+          accordion("Questions to check on your plot", list(f.revisar)),
         ]
-        : h("p", { class: "hint", text: "No se pudo cargar la ficha de evidencia. Intente recargar la página." }),
-      accordion("Datos usados en este resultado", [list(f.datosUsados), f.nota && h("p", { class: "hint", text: f.nota })]),
-      accordion("Detalle para el técnico", list(f.detalleTecnico)),
-      accordion("Fuentes consultadas", sources(f, images), { count: f.fuentes.length })),
+        : h("p", { class: "hint", text: "The evidence report could not be loaded. Try reloading the page." }),
+      accordion("Data used in this result", [list(f.datosUsados), f.nota && h("p", { class: "hint", text: f.nota })]),
+      accordion("Technical details", list(f.detalleTecnico)),
+      accordion("Sources consulted", sources(f, images), { count: f.fuentes.length })),
 
     h("footer", { class: "detail-foot reveal", style: "--i:7" },
-      h("button", { type: "button", class: "btn btn-primary", onclick: () => onExport(f) }, icon("download", 18), `Descargar esta ficha (PDF)`)));
+      h("button", { type: "button", class: "btn btn-primary", onclick: () => onExport(f) }, icon("download", 18), `Download this report (PDF)`)));
 
   return { el, riskCanvas, radarCanvas };
 }

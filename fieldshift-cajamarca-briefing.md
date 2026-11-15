@@ -1,462 +1,409 @@
-# FieldShift Perú — Briefing Completo de Desarrollo
+# FieldShift Peru — Complete Development Brief
+
 **NASA Space Apps Challenge 2026**
-Sitio piloto: Cajamarca · Sierra Norte Peruana · 14–15 Nov 2026
+Pilot site: Cajamarca · Northern Peruvian Andes · November 14–15, 2026
+
+This is the original project brief, translated into English for presentation. The project is now named **SowOrbit**. The README describes the current implementation; the requirements below record the initial plan.
 
 ---
 
-## 00. El Reto: Field Shift — Adapting Farms with NASA Data
+## 00. The challenge: Field Shift — Adapting Farms with NASA Data
 
-### Descripción oficial del reto
+### Challenge description
 
-El reto **"Field Shift: Adapting Farms with NASA Data"** del NASA Space Apps Challenge 2026 pide a los equipos crear **herramientas de código abierto** que permitan a comunidades agrícolas —especialmente en regiones vulnerables al cambio climático— tomar decisiones informadas sobre qué cultivos plantar, cuándo plantarlos y cómo organizarlos en rotaciones inteligentes, utilizando datos reales de la NASA.
+The **Field Shift: Adapting Farms with NASA Data** challenge asks teams to build **open-source tools** that help farming communities, especially those vulnerable to climate change, make informed decisions about which crops to plant, when to plant them and how to organize smart rotations using real NASA data.
 
-La premisa del reto es que los agricultores en muchas regiones del mundo ya están experimentando cambios en patrones de lluvia, heladas, temperatura y humedad del suelo. Sin acceso a datos ni a herramientas que los interpreten, deben tomar decisiones críticas de siembra "a ciegas". La NASA ha recopilado décadas de datos satelitales y climáticos que pueden cambiar esa ecuación.
+Farmers are already experiencing changes in rainfall, frost, temperature and soil moisture. Without access to data or tools that interpret them, they must make critical planting decisions with limited information. Decades of NASA satellite and climate observations can help.
 
-### Lo que el reto pide específicamente
+### Evaluation criteria stated in the original brief
 
-| Criterio de evaluación | Peso | Descripción |
+| Criterion | Weight | Description |
 |---|---|---|
-| **Uso creativo de datos NASA** | 25% | Usar al menos un dataset de la NASA de forma central y no decorativa |
-| **Relevancia del problema** | 25% | Que el problema sea real y la solución sea útil para comunidades agrícolas reales |
-| **Calidad técnica** | 25% | Que funcione correctamente, sea reproducible y esté documentado |
-| **Potencial de impacto** | 25% | Que pueda escalar, que sea de código abierto, que inspire a otros |
+| **Creative use of NASA data** | 25% | At least one NASA dataset plays a central, substantive role |
+| **Problem relevance** | 25% | A real problem and a useful solution for real farming communities |
+| **Technical quality** | 25% | Working, reproducible and documented software |
+| **Impact potential** | 25% | Scalable, open-source work that others can build on |
 
-### Tipos de soluciones válidas según el reto
+These are the criteria recorded in the team's brief; consult the official event rules to confirm the judging rubric.
 
-- Herramienta interactiva web o móvil para agricultores o técnicos agrícolas
-- Dashboard de visualización de datos climáticos y agronómicos
-- Sistema de recomendación de cultivos o rotaciones basado en datos satelitales
-- API o biblioteca de código abierto que otros puedan reutilizar
+### Eligible solution types described in the brief
 
-### Por qué nuestra solución responde al reto
+- Interactive web or mobile tool for farmers or agricultural advisors.
+- Climate and agronomic data dashboard.
+- Satellite-based crop or rotation recommendation system.
+- Reusable open-source API or library.
 
-| Requisito del reto | Nuestra respuesta |
+### How the proposed solution responds
+
+| Requirement | Proposed response |
 |---|---|
-| Datos NASA centrales | NASA POWER (clima 1991–2024) + MODIS NDVI + SMAP humedad + SRTM elevación |
-| Problema real | Agricultores de la sierra peruana pierden cosechas por heladas, sequías y degradación del suelo |
-| Código abierto | Repositorio público en GitHub, licencia MIT |
-| Escalable | La arquitectura de dos niveles permite cubrir cualquier punto de la sierra desde el primer día |
-| Muestra vacíos de datos | La app incluye fichas de evidencia con advertencias explícitas sobre incertidumbre |
+| NASA data at the core | NASA POWER (1991–2024 climate), plus MODIS NDVI, SMAP moisture and SRTM elevation |
+| Real problem | Highland farmers lose crops to frost, drought and soil degradation |
+| Open source | Public GitHub repository, MIT license |
+| Scalable | Two-level architecture designed to cover highland points |
+| Data gaps visible | Evidence reports explicitly disclose uncertainty |
 
-### Objetivos de nuestra solución (lo que queremos lograr)
+### Objectives
 
-1. **Objetivo principal:** Que un agricultor en Cajamarca pueda abrir la herramienta en su celular, marcar su parcela, responder 5 preguntas sobre sus prioridades, y obtener en menos de 30 segundos una comparación de 3 rotaciones de cultivo respaldada por datos reales de la NASA.
-
-2. **Objetivo de datos:** Integrar como mínimo NASA POWER API (obligatorio), y si los datos llegan a tiempo, MODIS NDVI, SMAP humedad de suelo y SRTM pendiente para Cajamarca.
-
-3. **Objetivo de transparencia:** Mostrar siempre la fuente de cada dato, el nivel de confianza de la recomendación, y qué información falta o no pudo verificarse con datos satelitales.
-
-4. **Objetivo de escalabilidad:** Diseñar la arquitectura para que añadir nuevos puntos piloto (Huancayo, Puno, Cusco) sea tan simple como agregar un nuevo archivo JSON al repositorio.
-
-5. **Objetivo de despliegue:** Demo en vivo en GitHub Pages con un enlace público que el jurado pueda abrir y probar durante la evaluación.
+1. A farmer in Cajamarca can open the tool on a phone, mark a plot, answer five priority questions, and compare three NASA-backed crop rotations in under 30 seconds.
+2. Integrate NASA POWER as a minimum; add MODIS NDVI, SMAP soil moisture and SRTM slope for Cajamarca if delivered in time.
+3. Always show data sources, recommendation confidence and information that satellite data could not verify.
+4. Make new pilot sites (Huancayo, Puno, Cusco) easy to add through repository JSON files.
+5. Publish a GitHub Pages demo the judges can open and test.
 
 ---
 
-## 01. Objetivo y Alcance Mínimo
+## 01. Objective and minimum scope
 
-Una herramienta web que corra en el navegador, sin servidor propio, que permita al agricultor andino marcar cualquier punto de la sierra peruana, declarar sus prioridades y recibir una comparación de **3 rotaciones de cultivo** respaldada por datos reales de la NASA.
+A browser-based tool, without a dedicated server, that lets Andean farmers select a highland point, state priorities and compare **three crop rotations** using real NASA data.
 
-### Enfoque de dos niveles
+### Two levels
 
-- **Nivel 1 — Sierra libre:** el usuario marca cualquier punto entre los paralelos 6°S y 16°S sobre los 2 500 m s.n.m. NASA POWER responde en vivo para ese punto. El calendario de riesgos y la comparación de rotaciones funcionan en *toda la sierra*.
-- **Nivel 2 — Puntos piloto detallados:** para Cajamarca (y los puntos opcionales si los datos llegan) se muestran gráficos adicionales de NDVI, humedad de suelo y pendiente.
+- **Level 1 — Open highlands:** points between 6°S and 16°S above 2,500 m. NASA POWER responds for the selected point; risk calendars and rotation comparisons work throughout the intended area.
+- **Level 2 — Detailed pilots:** additional NDVI, soil moisture and slope charts for Cajamarca and optional sites if data arrive.
 
-### Sitio piloto principal
-| Campo | Valor |
+### Main pilot
+
+| Field | Value |
 |---|---|
-| Ubicación | Cajamarca, Cajamarca |
-| Coordenadas | Lat: -7.16 · Lon: -78.51 |
-| Altitud | ~2 750 m s.n.m. |
-| Tile SRTM | S08W079 |
-| Rotación base | Papa → Maíz → Trigo → Descanso |
+| Location | Cajamarca, Cajamarca |
+| Coordinates | Latitude −7.16, longitude −78.51 |
+| Elevation | Approximately 2,750 m |
+| SRTM tile | S08W079 |
+| Reference rotation | Potato → Maize → Wheat → Fallow |
 
-### Fuera del alcance (no tocar en el hackathon)
-- Cobertura de todo Perú sin validación agronómica por región
-- Modelos de IA o ML entrenados
-- Cuentas de usuario / base de datos propia
-- App móvil nativa
-- Precios de mercado en vivo
-- ECOSTRESS y GRACE (mencionarlos como trabajo futuro)
+### Outside hackathon scope
+
+- All-Peru coverage without regional agronomic validation.
+- Trained AI or ML models.
+- User accounts or a dedicated database.
+- Native mobile app.
+- Live market prices.
+- ECOSTRESS and GRACE (mention as future work).
 
 ---
 
-## 02. Arquitectura del Sistema
+## 02. System architecture
 
-```
-Navegador del agricultor
-    │
-    ├─ Mapa (Leaflet) ──► el usuario marca su parcela (lat/lon)
-    │
-    ├─ Panel de prioridades ──► pesos del agricultor (0–5 por criterio)
-    │
-    ├─ NASA POWER API (fetch en vivo)
-    │       └─ Temperatura, lluvia, heladas 1991–2024
-    │
-    ├─ JSON estáticos (preprocesados con Python)
-    │       ├─ data/pilots/cajamarca.json   (MODIS + SMAP + SRTM)
-    │       ├─ data/pilots_index.json       (lista de pilotos disponibles)
-    │       └─ data/cultivos.json           (tabla agrónoma: 8 cultivos)
-    │
-    ├─ Motor de reglas (scoring.js)
-    │       ├─ Calcula indicadores mensuales por cultivo
-    │       ├─ Puntúa 3 rotaciones × 5 criterios × peso del agricultor
-    │       └─ Asigna nivel de confianza (Alto / Medio / Bajo)
-    │
-    └─ Renderizado
-            ├─ Calendario de riesgos (Chart.js — barras apiladas)
-            ├─ Tabla comparativa 3 rotaciones
-            ├─ Fichas de evidencia y advertencias
-            └─ Glosario de términos técnicos
+```text
+Farmer's browser
+  ├─ Leaflet map → plot coordinates
+  ├─ Priorities → five weights, 0–5
+  ├─ Live NASA POWER API → temperature, rainfall, frost (1991–2024)
+  ├─ Preprocessed static JSON
+  │    ├─ data/pilots/cajamarca.json → MODIS + SMAP + SRTM (planned)
+  │    ├─ data/pilots_index.json → available pilots
+  │    └─ data/cultivos.json → eight-crop agronomic table
+  ├─ scoring.js
+  │    ├─ monthly crop indicators
+  │    ├─ three rotations × five criteria × farmer weights
+  │    └─ confidence: High / Medium / Low
+  └─ Rendering
+       ├─ risk calendar (Chart.js stacked bars in original plan)
+       ├─ three-rotation comparison
+       ├─ evidence reports and warnings
+       └─ technical glossary
 ```
 
-Todo corre en el cliente (HTML + JS). No hay backend. GitHub Pages sirve los archivos estáticos.
+Everything runs on the client in HTML and JavaScript. GitHub Pages serves the static files.
 
----
+## 03. Technologies and libraries
 
-## 03. Tecnologías y Librerías
-
-| Capa | Herramienta | Versión | Por qué |
+| Layer | Tool | Version | Reason |
 |---|---|---|---|
-| Interfaz base | HTML + CSS + JS (vanilla) | — | Sin build steps, listo en minutos |
-| Mapa interactivo | Leaflet.js | 1.9.4 | Ligero, OpenStreetMap gratuito |
-| Gráficos | Chart.js | 4.4.4 | Barras, líneas y radar con una sola librería |
-| Preprocesamiento | Python 3 + pandas + rasterio + numpy | — | Leer GeoTIFF de SRTM/SMAP y exportar JSON |
-| Control de versiones | Git + GitHub | — | Colaboración y despliegue automático |
-| Despliegue | GitHub Pages | — | Gratis, enlace público para el jurado |
-| Clima en vivo | NASA POWER API (REST) | v2 | Sin clave, llamada desde `fetch()` en el browser |
+| Interface | HTML + CSS + vanilla JS | — | No build step |
+| Interactive map | Leaflet.js | 1.9.4 | Lightweight, free OpenStreetMap |
+| Charts | Chart.js | 4.4.4 | Bars, lines and radar |
+| Preprocessing | Python 3 + pandas + rasterio + numpy | — | GeoTIFF processing and JSON export |
+| Version control | Git + GitHub | — | Collaboration and deployment |
+| Hosting | GitHub Pages | — | Free public demo |
+| Live climate | NASA POWER REST API | v2 | Browser fetch without an API key |
 
-> **No usar React ni frameworks pesados.** Sin tiempo para configurar bundlers. Vanilla JS con Chart.js y Leaflet es suficiente para ganar.
+**Do not use React or heavy frameworks during the hackathon.** Vanilla JavaScript, Chart.js and Leaflet are sufficient without bundler setup.
 
----
+## 04. NASA data — what to use and how
 
-## 04. Datos NASA — Qué Usar y Cómo
+### 4.1 NASA POWER — project core
 
-### 4.1 NASA POWER — API en vivo (núcleo del proyecto)
+The original brief proposed this climatology request:
 
-```
+```text
 GET https://power.larc.nasa.gov/api/temporal/climatology/point
-    ?parameters=T2M_MAX,T2M_MIN,PRECTOTCORR,EVPTRNS
-    &community=AG
-    &longitude=-78.51
-    &latitude=-7.16
-    &format=JSON
+  ?parameters=T2M_MAX,T2M_MIN,PRECTOTCORR,EVPTRNS
+  &community=AG&longitude=-78.51&latitude=-7.16&format=JSON
 ```
 
-| Parámetro | Variable | Para qué sirve |
+Implementation note: the project subsequently adopted the `monthly` endpoint and parameters documented in the README and `js/api.js`.
+
+| Parameter | Variable | Purpose |
 |---|---|---|
-| Temperatura máxima | `T2M_MAX` | Estrés por calor en cultivos |
-| Temperatura mínima | `T2M_MIN` | Riesgo de helada (< 0 °C) |
-| Precipitación | `PRECTOTCORR` | Meses secos y lluvias extremas |
-| Evapotranspiración | `EVPTRNS` | Balance hídrico del suelo |
-| Radiación solar | `ALLSKY_SFC_SW_DWN` | Fotosíntesis y crecimiento |
-| Humedad relativa | `RH2M` | Condiciones para enfermedades |
+| Maximum temperature | T2M_MAX | Crop heat stress |
+| Minimum temperature | T2M_MIN | Frost risk (original threshold < 0 °C) |
+| Precipitation | PRECTOTCORR | Dry months and extreme rainfall |
+| Evapotranspiration | EVPTRNS | Soil water balance |
+| Solar radiation | ALLSKY_SFC_SW_DWN | Photosynthesis and growth |
+| Relative humidity | RH2M | Disease conditions |
 
-### 4.2 MODIS — NDVI (AppEEARS, pedir HOY con todos los puntos)
+### 4.2 MODIS NDVI — request through AppEEARS immediately
 
-- **Producto:** MOD13Q1 — NDVI cada 16 días, 250 m de resolución
-- **Período:** 2015–2024
-- **Portal:** https://appeears.earthdatacloud.nasa.gov
-- **Tipo:** Point Sample — un solo pedido con los 4 puntos
+- Product: **MOD13Q1**, NDVI every 16 days at 250 m.
+- Period: 2015–2024.
+- Portal: https://appeears.earthdatacloud.nasa.gov
+- Request type: Point Sample, one request for all four points.
 
-| Punto | Lat | Lon | Día |
+| Point | Latitude | Longitude | Priority |
 |---|---|---|---|
-| Cajamarca | -7.16 | -78.51 | Día 1 (obligatorio) |
-| Huancayo (Junín) | -12.07 | -75.21 | Día 2 si llega |
-| Puno | -15.84 | -70.02 | Día 2 si llega |
-| Cusco | -13.52 | -71.97 | Día 2 si llega |
+| Cajamarca | −7.16 | −78.51 | Required on day 1 |
+| Huancayo (Junín) | −12.07 | −75.21 | Day 2 if delivered |
+| Puno | −15.84 | −70.02 | Day 2 if delivered |
+| Cusco | −13.52 | −71.97 | Day 2 if delivered |
 
-### 4.3 SMAP — Humedad del suelo (mismo pedido que MODIS)
+### 4.3 SMAP soil moisture
 
-- **Producto:** SPL3SMP.009 — humedad superficial (m³/m³), ~9 km
-- **Variable:** `Soil_Moisture_Retrieval_Data_AM_soil_moisture`
+Request alongside MODIS. Original proposed product: **SPL3SMP.009**, surface soil moisture in m³/m³ at approximately 9 km. Variable: `Soil_Moisture_Retrieval_Data_AM_soil_moisture`. See the README for the product actually requested.
 
-### 4.4 SRTM — Elevación y pendiente
+### 4.4 SRTM elevation and slope
 
-| Punto | Tile SRTM | Cuándo |
+| Point | SRTM tile | Priority |
 |---|---|---|
-| Cajamarca | `S08W079` | Día 1 (obligatorio) |
-| Huancayo | `S13W076` | Día 2 si hay tiempo |
-| Puno | `S16W071` | Día 2 si hay tiempo |
-| Cusco | `S14W073` | Día 2 si hay tiempo |
+| Cajamarca | S08W079 | Required on day 1 |
+| Huancayo | S13W076 | Day 2 if time permits |
+| Puno | S16W071 | Day 2 if time permits |
+| Cusco | S14W073 | Day 2 if time permits |
 
-Descarga: https://earthexplorer.usgs.gov (requiere cuenta Earthdata gratuita)
+Download: https://earthexplorer.usgs.gov (free Earthdata account required).
 
-### 4.5 FAO GAEZ — Aptitud de cultivos
+### 4.5 FAO GAEZ crop suitability
 
-Portal: https://gaez.fao.org — buscar cada cultivo para la zona andina peruana y extraer manualmente aptitud, temperatura óptima y tolerancia hídrica hacia `cultivos.json`.
+Use https://gaez.fao.org to research suitability, optimal temperature and water tolerance for Andean crops, then record consulted values in `cultivos.json`.
 
-**Plan B si AppEEARS falla:** Giovanni (https://giovanni.gsfc.nasa.gov) genera gráficos sin descargar archivos. El calendario de riesgos sigue funcionando solo con NASA POWER.
+**If AppEEARS fails:** use Giovanni (https://giovanni.gsfc.nasa.gov) for a chart without downloading files. The risk calendar can still run on NASA POWER alone.
 
----
+## 05. Planned repository layout
 
-## 05. Estructura del Repositorio
-
-```
+```text
 fieldshift-cajamarca/
 ├── data/
-│   ├── cultivos.json             ← tabla agrónoma de los 8 cultivos
+│   ├── cultivos.json
 │   ├── pilots/
-│   │   ├── cajamarca.json        ← NDVI + SMAP + SRTM · Día 1
-│   │   ├── huancayo.json         ← si llegan los datos · Día 2
-│   │   ├── puno.json             ← si llegan los datos · Día 2
-│   │   └── cusco.json            ← si llegan los datos · Día 2
-│   └── pilots_index.json         ← lista de puntos con coords
+│   │   ├── cajamarca.json
+│   │   ├── huancayo.json
+│   │   ├── puno.json
+│   │   └── cusco.json
+│   └── pilots_index.json
 ├── js/
-│   ├── api.js                    ← llama a NASA POWER, maneja errores
-│   ├── scoring.js                ← motor de reglas y puntuación
-│   ├── charts.js                 ← renderiza gráficos con Chart.js
-│   └── ui.js                     ← manipulación del DOM, eventos
-├── css/
-│   └── style.css
-├── scripts/                      ← scripts Python de preprocesamiento
+│   ├── api.js
+│   ├── scoring.js
+│   ├── charts.js
+│   └── ui.js
+├── css/style.css
+├── scripts/
 │   ├── process_srtm.py
 │   └── process_appeears.py
-├── index.html                    ← página principal
+├── index.html
 └── README.md
 ```
 
----
+Pilot JSON files contain preprocessed NDVI, SMAP and SRTM data when available. See the live repository for filenames and modules added during implementation.
 
-## 06. Tabla de Cultivos — `cultivos.json`
+## 06. Crop table — `cultivos.json`
 
-Los 8 cultivos prioritarios para la sierra peruana:
+Eight priority crops for the Peruvian highlands. Values below are planning estimates requiring validation.
 
-| Cultivo | Fija N | Forraje | Agua (mm/ciclo) | Tolerancia sequía | Ingresos |
+| Crop | Nitrogen fixation | Forage | Water (mm/cycle) | Drought tolerance | Income |
 |---|---|---|---|---|---|
-| Papa | No | No | 500 | Baja | Alto |
-| Maíz | No | Parcial | 450 | Media | Medio |
-| Trigo | No | No | 350 | Media | Medio |
-| Haba | Sí (~100 kg N/ha) | Sí | 300 | Media | Medio |
-| Tarwi | Sí (~80 kg N/ha) | No | 280 | Alta | Medio |
-| Cebada | No | Sí | 300 | Media | Bajo |
-| Avena forrajera | No | Sí | 320 | Media | Bajo |
-| Vicia sativa | Sí (~60 kg N/ha) | Sí | 250 | Alta | Bajo |
+| Potato | No | No | 500 | Low | High |
+| Maize | No | Partial | 450 | Medium | Medium |
+| Wheat | No | No | 350 | Medium | Medium |
+| Faba bean | Approximately 100 kg N/ha | Yes | 300 | Medium | Medium |
+| Andean lupin (tarwi) | Approximately 80 kg N/ha | No | 280 | High | Medium |
+| Barley | No | Yes | 300 | Medium | Low |
+| Forage oats | No | Yes | 320 | Medium | Low |
+| Common vetch (Vicia sativa) | Approximately 60 kg N/ha | Yes | 250 | High | Low |
 
----
+## 07. Three rotations to compare
 
-## 07. Las 3 Rotaciones a Comparar
+### A — Traditional (reference)
 
-### Rotación A — Tradicional (actual)
-**Papa → Maíz → Trigo → Descanso**
-- Rotación típica de Cajamarca
-- Alta demanda de agua y nutrientes
-- No fija nitrógeno
-- Campo desnudo 3–4 meses en estación seca
+**Potato → Maize → Wheat → Fallow**
 
-### Rotación B — Nitrógeno+ (con leguminosas)
-**Papa → Haba → Cebada → Avena forrajera**
-- Haba fija ~100 kg N/ha/año
-- Avena cubre suelo y alimenta el ganado lechero
-- Cajamarca tiene fuerte tradición ganadera: el forraje suma valor real
-- Reduce fertilizante sintético necesario
+A Cajamarca reference rotation with high estimated water and nutrient demand, no cultivated nitrogen-fixing legume, and potentially bare soil for 3–4 dry-season months.
 
-### Rotación C — Agua Eficiente (resiliente)
-**Papa → Tarwi → Trigo → Vicia sativa**
-- Tarwi fija nitrógeno y tolera la estación seca de Cajamarca
-- Vicia sativa es cobertura verde: reduce erosión y agrega materia orgánica
-- Menor consumo de agua total que la rotación actual
-- Tarwi tiene mercado creciente como superalimento
+### B — Nitrogen+ (with legumes)
 
-### Fichas de evidencia (lo que muestra la app por cada rotación)
+**Potato → Faba bean → Barley → Forage oats**
 
-| Campo | Contenido | Fuente |
+Faba bean has an estimated nitrogen contribution of approximately 100 kg N/ha/year in the initial proposal. Oats provide cover and dairy livestock feed, relevant to Cajamarca's livestock tradition. Potential fertilizer savings require validation.
+
+### C — Water efficient (resilient)
+
+**Potato → Andean lupin → Wheat → Common vetch**
+
+Andean lupin fixes nitrogen and has estimated drought tolerance. Vetch provides green cover, potentially reducing erosion and adding organic matter. The initial proposal assumes lower water use than A and notes a growing market for tarwi; neither establishes local profitability or water savings.
+
+### Evidence report fields
+
+| Field | Content | Source |
 |---|---|---|
-| ¿Por qué se sugiere? | Texto en lenguaje simple | Motor de reglas + cultivos.json |
-| Evidencia NASA | Gráfico con período óptimo marcado | NASA POWER |
-| Beneficios esperados | Nitrógeno, erosión, agua, ingresos | cultivos.json + FAO GAEZ |
-| Vacíos de información | Qué no se verificó con datos satelitales | Transparencia explícita |
-| Riesgos a revisar | Lo que un técnico local debe validar | Redacción del equipo |
-| Nivel de confianza | 🟢 Alto / 🟡 Medio / 🔴 Bajo | Motor de reglas |
+| Why suggested? | Simple explanation | Rules engine + crop table |
+| NASA evidence | Chart with suitable period highlighted | NASA POWER |
+| Potential benefits | Nitrogen, erosion, water, income | Crop table + FAO GAEZ |
+| Information gaps | What satellites could not verify | Explicit disclosure |
+| Risks to review | What a local advisor should validate | Team-authored content |
+| Confidence | High / Medium / Low | Rules engine |
 
----
+## 08. Rules engine — `scoring.js`
 
-## 08. Motor de Reglas — `scoring.js`
+A transparent statistical rules engine without machine learning. These formulas describe the initial plan; consult the implementation for current calculations.
 
-Motor estadístico transparente, sin ML.
+### Step 1: Monthly NASA POWER indicators
 
-### Paso 1: Indicadores mensuales (NASA POWER)
-```javascript
-indicadores[mes] = {
-  prob_helada:     // % de años donde T2M_MIN < 0 °C
-  lluvia_avg:      // PRECTOTCORR promedio (mm)
-  lluvia_cv:       // coef. variación (incertidumbre)
-  deficit_hidrico: // lluvia_avg - EVPTRNS_avg
-  temp_media:      // (T2M_MAX + T2M_MIN) / 2
-}
+```js
+// Per month:
+// prob_helada: fraction of years with T2M_MIN below the frost threshold
+// lluvia_avg: mean precipitation
+// lluvia_cv: coefficient of rainfall variation
+// deficit_hidrico: rainfall minus evapotranspiration
+// temp_media: (T2M_MAX + T2M_MIN) / 2
 ```
 
-### Paso 2: Puntaje por cultivo × mes
-```javascript
-score_mes = 100
-  - penalidad_helada(prob_helada, cultivo.temp_helada)
-  - penalidad_agua(deficit_hidrico, cultivo.agua_mm_ciclo)
-  - penalidad_temperatura(temp_media, cultivo.temp_opt_min/max)
-// Resultado: 0–100 por mes durante el ciclo del cultivo
+### Step 2: Crop/month score
+
+```text
+score = 100 − frost penalty − water penalty − temperature penalty
 ```
 
-### Paso 3: Puntaje de rotación × 5 criterios
+Output: 0–100 for each month in the crop cycle.
 
-| Criterio | Cómo se calcula | Dato fuente |
+### Step 3: Five rotation criteria
+
+| Criterion | Initial calculation | Source |
 |---|---|---|
-| Ahorro de agua | Suma de agua_mm_ciclo × (1 − cobertura) | cultivos.json |
-| Salud del suelo | N fijado + cobertura_suelo promedio | cultivos.json |
-| Riesgo de erosión | Cobertura × (1 − pendiente_norm) | SRTM + cultivos.json |
-| Forraje / Ingresos | Suma de cultivos con forraje=true | cultivos.json |
-| Resiliencia climática | Score climático promedio del ciclo | NASA POWER |
+| Water savings | Sum of crop water needs × (1 − cover) | Crop table |
+| Soil health | Nitrogen fixation + mean ground cover | Crop table |
+| Erosion risk | Cover × (1 − normalized slope) | SRTM + crop table |
+| Forage / income | Sum of forage crops | Crop table |
+| Climate resilience | Mean crop-cycle climate score | NASA POWER |
 
-### Paso 4: Puntaje final ponderado
-```javascript
-score_rotacion = Σ (criterio_i × peso_agricultor_i) / Σ pesos
-// peso_agricultor_i: 0–5, elegido por el usuario
-// Resultado final: 0–100 por rotación
+### Step 4: Weighted total
+
+```text
+rotation score = Σ(criterion × farmer weight) / Σ(weights)
 ```
 
-### Paso 5: Nivel de confianza
-```javascript
-"Alto"   // usa solo datos medidos (NASA POWER, SMAP)
-"Medio"  // algún criterio usa valores estimados de cultivos.json
-"Bajo"   // falta SMAP o SRTM, solo NASA POWER disponible
-```
+Weights range from 0–5; final scores range from 0–100.
 
----
+### Step 5: Confidence
 
-## 09. Cronograma de 2 Días
+The initial brief proposed High for measured NASA POWER/SMAP data, Medium if a criterion uses crop-table estimates, and Low when SMAP or SRTM are missing. Later implementation uses locally corrected climate and satellite availability as described in `docs/TAREAS.md` and the current code. Internal enum values remain `Alto`, `Medio`, `Bajo`; presentation labels are English.
 
-> ⚠️ **Antes de cualquier otra cosa (primeros 20 minutos):** Crear cuenta en Earthdata, lanzar pedidos en AppEEARS y crear el repositorio en GitHub.
+## 09. Two-day schedule
 
-### DÍA 1 — Viernes 14 Nov
+**First 20 minutes:** create an Earthdata account, submit AppEEARS requests and create the GitHub repository.
 
-| Hora | Tarea |
+### Day 1 — November 14
+
+| Time | Task |
 |---|---|
-| 08:00–08:30 | 🚨 Crear cuentas Earthdata · AppEEARS pedido MODIS+SMAP para Cajamarca + 3 puntos opcionales · GitHub repo |
-| 08:30–09:00 | Repartir roles del equipo |
-| 09:00–11:00 | Script Python NASA POWER + cultivos.json · HTML base con mapa Leaflet y panel de prioridades |
-| 11:00–13:00 | Motor de reglas (scoring.js) · Calendario de riesgos con Chart.js |
-| 13:00–14:00 | Almuerzo · Verificar si datos de Cajamarca llegaron en AppEEARS |
-| 14:00–17:00 | Tabla comparativa 3 rotaciones · Fichas de evidencia · Glosario |
-| 17:00–18:00 | ✅ Primer despliegue en GitHub Pages |
-| 18:00–21:00 | Integrar MODIS, SMAP y SRTM si llegaron · Avanzar presentación |
+| 08:00–08:30 | Earthdata accounts; MODIS + SMAP requests for Cajamarca and three optional points; GitHub repository |
+| 08:30–09:00 | Assign team roles |
+| 09:00–11:00 | NASA POWER script + crop table; HTML map and priorities |
+| 11:00–13:00 | Rules engine and risk calendar |
+| 13:00–14:00 | Lunch; check AppEEARS delivery |
+| 14:00–17:00 | Rotation comparison, evidence reports and glossary |
+| 17:00–18:00 | First GitHub Pages deployment |
+| 18:00–21:00 | Integrate MODIS, SMAP and SRTM if delivered; start presentation |
 
-### DÍA 2 — Sábado 15 Nov
+### Day 2 — November 15
 
-| Hora | Tarea |
+| Time | Task |
 |---|---|
-| 08:00–10:00 | Integrar datos satelitales + pulir gráficos · Verificar todo funciona para Cajamarca |
-| 10:00–12:00 | Testing con 3 ubicaciones distintas · Corregir errores · Responsive en móvil |
-| 12:00–14:00 | Grabar video demo (3–5 min) con OBS o Loom |
-| 14:00–16:00 | Diapositivas (10 slides): Problema · Solución · Datos NASA · Demo · Rotaciones · Lógica · Trabajo futuro · Equipo |
-| 16:00–17:00 | 🚨 Completar página del proyecto en Space Apps |
-| 17:00 | ✅ ENTREGA FINAL con margen de tiempo |
+| 08:00–10:00 | Integrate satellite data, polish charts, verify Cajamarca |
+| 10:00–12:00 | Test three locations; fix errors; check mobile layout |
+| 12:00–14:00 | Record a 3–5 minute demo with OBS or Loom |
+| 14:00–16:00 | Ten slides: problem, solution, NASA data, demo, rotations, logic, future work and team |
+| 16:00–17:00 | Complete Space Apps project page |
+| 17:00 | Final submission with time to spare |
 
----
+Confirm the actual local event deadline; these are team planning times.
 
-## 10. Configuración GitHub + Despliegue
+## 10. GitHub and deployment
 
-### Pasos
+1. Create public repository `fieldshift-cajamarca` with an MIT license.
+2. Enable GitHub Pages: Settings → Pages → branch `main`, root folder → Save.
+3. Demo URL: `https://[username].github.io/fieldshift-cajamarca/`.
 
-1. **Crear repositorio:** `fieldshift-cajamarca` · Público · Licencia MIT
-2. **Habilitar GitHub Pages:** Settings → Pages → Branch: `main` / `(root)` → Save
-3. **URL del demo:** `https://[usuario].github.io/fieldshift-cajamarca/`
+### Team workflow
 
-### Flujo de trabajo del equipo
 ```bash
-# Cada persona trabaja en su rama
 git checkout -b feature/scoring-engine
 git add .
-git commit -m "feat: motor de puntuación con NASA POWER"
+git commit -m "feat: NASA POWER scoring engine"
 git push origin feature/scoring-engine
-# Crear Pull Request → revisar → merge a main
-# GitHub Pages actualiza automáticamente
+# Open a pull request, review and merge into main.
+# GitHub Pages updates automatically.
 ```
 
-### Ramas sugeridas
-
-| Rol | Rama |
+| Role | Suggested branch |
 |---|---|
-| Datos + Python | `feature/data-processing` |
-| Interfaz + mapa | `feature/ui-map` |
-| Motor de reglas | `feature/scoring-engine` |
-| Contenido + fichas | `feature/rotation-cards` |
+| Data + Python | feature/data-processing |
+| Interface + map | feature/ui-map |
+| Rules engine | feature/scoring-engine |
+| Content + reports | feature/rotation-cards |
 
-### README.md mínimo requerido
-```markdown
-# FieldShift Cajamarca 🌾
-Herramienta de apoyo a decisiones para rotaciones de cultivo
-en la sierra peruana usando datos NASA.
+### Minimum README
 
-## 🛰 Datasets NASA utilizados
-- NASA POWER API (clima diario 1991–2024)
-- MODIS MOD13Q1 (NDVI vegetación)
-- SMAP SPL3SMP (humedad suelo)
-- SRTM (elevación y pendiente)
+Include the project name, a crop-rotation decision-support description, NASA datasets actually used, the live demo URL, Cajamarca coordinates (−7.16, −78.51), and the MIT license. Distinguish planned datasets from integrated ones.
 
-## 🌍 Demo en vivo
-https://[usuario].github.io/fieldshift-cajamarca/
+## 11. Space Apps submission checklist
 
-## 🏔 Sitio piloto
-Cajamarca, Perú (-7.16, -78.51)
+**Verify the exact closing time for the local event in Peru.**
 
-## Licencia
-MIT
-```
+- [ ] Project name.
+- [ ] One-paragraph description.
+- [ ] YouTube demo video (3–5 minutes).
+- [ ] GitHub repository link.
+- [ ] Live GitHub Pages demo link.
+- [ ] List of NASA datasets used.
+- [ ] AI use declaration: whether and how it was used.
+- [ ] References and sources.
 
----
+## 12. Contingency plans
 
-## 11. Checklist de Entrega — Space Apps
-
-> ⚠️ Verificar la hora exacta de cierre del evento local en Perú.
-
-- [ ] Nombre del proyecto
-- [ ] Descripción corta (1 párrafo)
-- [ ] Video demo en YouTube (3–5 min)
-- [ ] Enlace al repositorio en GitHub
-- [ ] Enlace al demo en vivo (GitHub Pages)
-- [ ] Lista de datasets NASA usados
-- [ ] ¿Usaron IA? (sí/no y cómo)
-- [ ] Referencias y fuentes
-
----
-
-## 12. Planes de Contingencia
-
-| Riesgo | Plan B |
+| Risk | Fallback |
 |---|---|
-| AppEEARS tarda más de 6 h | Solo NASA POWER para el demo. NDVI desde Giovanni como imagen estática en diapositivas. |
-| NASA POWER API falla en vivo | Guardar respuesta del piloto como `power_cache.json`. `api.js` la usa si el fetch falla. |
-| Sin internet durante el demo | `python -m http.server 8000` localmente. Todo es estático. |
-| Datos agronómicos incompletos | Usar valores de FAO e INIA, marcarlos como "estimado". Muestra los vacíos de información (lo que el reto pide). |
-| Miembro del equipo abandona | MVP mínimo: NASA POWER + cultivos.json + 3 rotaciones. No requiere AppEEARS ni Python. |
+| AppEEARS takes over six hours | NASA POWER-only demo; Giovanni NDVI image in slides |
+| POWER fails live | Save pilot response as a cache and load it from `api.js` |
+| No internet during demo | Serve static files locally with `python -m http.server 8000`; prepare external assets and data ahead of time |
+| Incomplete agronomic data | Use consulted FAO/INIA values, mark estimates and disclose information gaps |
+| A member leaves | Minimum MVP: POWER + crop table + three rotations; no AppEEARS or Python needed at runtime |
 
----
+## 13. Team roles
 
-## 13. Roles del Equipo
-
-| Rol | Responsabilidades |
+| Role | Responsibilities |
 |---|---|
-| **Científico de Datos** | Script Python · AppEEARS · NASA POWER · cultivos.json · JSONs de NDVI, SMAP y SRTM |
-| **Desarrollador Web** | index.html · Leaflet mapa · Chart.js gráficos · Panel de prioridades · Diseño responsive |
-| **Ing. de Reglas** | scoring.js · Motor de puntuación · Nivel de confianza · Fichas de evidencia |
-| **Comunicador** | Video demo · Diapositivas · README · Página Space Apps · Textos para el agricultor |
+| **Data scientist** | Python, AppEEARS, NASA POWER, crop table and satellite JSON files |
+| **Web developer** | HTML, Leaflet, Chart.js, priorities and responsive layout |
+| **Rules engineer** | Scoring engine, confidence and evidence reports |
+| **Communicator** | Demo video, slides, README, Space Apps page and farmer-facing text |
 
-> **Si son 3 personas:** Rol Ing. de Reglas + Científico de Datos lo hace la misma persona.
-> **Si son 2 personas:** Una hace datos + lógica, la otra hace interfaz + presentación.
+With three people, combine data science and rules engineering. With two, one handles data and logic, the other interface and presentation.
 
----
+## 14. App glossary
 
-## 14. Glosario para la App
-
-| Término técnico | Explicación simple |
+| Technical term | Simple explanation |
 |---|---|
-| NDVI | Número del -1 al 1 que dice qué tan verde y sano está el campo. Más cerca de 1 = más vegetación verde y vigorosa. |
-| Evapotranspiración | Cuánta agua pierde el suelo y las plantas entre el sol y la respiración de las hojas. Indica cuánta agua "consume" el campo. |
-| Anomalía de humedad | Si el suelo tiene más o menos agua de lo normal para esa época del año en ese lugar. |
-| Riesgo de helada | Qué tan probable es que la temperatura baje a 0 °C o menos en un mes, según los últimos 30 años. |
-| Balance hídrico | Diferencia entre el agua que cae (lluvia) y la que se evapora. Negativo = déficit. |
-| Dato satelital vs. en campo | El satélite ve desde 500 km y da un promedio del área. La estación meteorológica mide exactamente en un punto. Los dos juntos son más confiables que uno solo. |
+| NDVI | A number from −1 to 1 indicating vegetation greenness. Values closer to 1 generally indicate greener, more vigorous vegetation. |
+| Evapotranspiration | Water lost from soil and plants through evaporation and transpiration; indicates water use. |
+| Soil moisture anomaly | Whether soil is wetter or drier than usual for that time and location. |
+| Frost risk | How often temperatures fall to the frost threshold in a given month, based on historical data. The implementation uses a preventive threshold below 2 °C at 2 m above ground. |
+| Water balance | Rainfall minus evaporative loss; negative means a deficit. |
+| Satellite vs. field data | Satellites describe an area; a weather station measures a particular point. Combining both can improve reliability. |
+
+The working, expanded glossary is in `data/glosario.json`.
 
 ---
 
-> **Recuerda:** La herramienta apoya al agricultor — no reemplaza su conocimiento ni el de los técnicos locales. Incluir ese aviso en la interfaz es un punto explícito del reto.
+**The tool supports farmers; it does not replace their knowledge or that of local agricultural advisors. Include this notice in the interface.**
 
----
-*FieldShift Cajamarca · NASA Space Apps Challenge 2026 · Generado el 14 Nov 2026*
+*FieldShift Cajamarca / SowOrbit · NASA Space Apps Challenge 2026 · Original brief generated November 14, 2026; English edition November 15, 2026.*

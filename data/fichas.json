@@ -2,11 +2,11 @@
   "_meta": {
     "version": 1,
     "fecha_revision": "2026-11-14",
-    "alcance": "Síntesis documental para explicar propuestas del equipo; no es un ensayo de las rotaciones ni una validación de los parámetros del motor.",
-    "nota_comun": "Las cantidades de agua, nitrógeno, cobertura e ingresos del motor siguen siendo estimaciones del equipo pendientes de validación local. No se garantizan cosechas, ahorro de fertilizante ni rentabilidad.",
+    "alcance": "Documentary synthesis explaining the team’s proposals; not a rotation trial or validation of engine parameters.",
+    "nota_comun": "Engine values for water, nitrogen, ground cover and income remain team estimates pending local validation. Harvests, fertilizer savings and profitability are not guaranteed.",
     "vacios_comunes": [
-      "No se conocen el análisis de suelo, el riego, las variedades, las plagas ni los costos de esta parcela.",
-      "Las fuentes agronómicas explican mecanismos generales; no prueban cuál de estas tres secuencias es mejor en el punto elegido."
+      "Soil tests, irrigation, varieties, pests and costs for this plot are unknown.",
+      "Agronomic sources explain general mechanisms; they do not establish which of these three sequences is best at the selected point."
     ]
   },
   "fuentes": [
@@ -15,17 +15,17 @@
       "institucion": "FAO",
       "titulo": "Development of a Framework for Good Agricultural Practices (2003)",
       "url": "https://www.fao.org/4/y8704e/y8704e.htm",
-      "seccion": "Anexo, apartados ii y vi",
-      "alcance": "Respalda cobertura del suelo, reciclaje de residuos e inclusión de leguminosas. No evalúa estas secuencias en Cajamarca.",
+      "seccion": "Annex, sections ii and vi",
+      "alcance": "Supports ground cover, residue recycling and the inclusion of legumes. Does not assess these sequences in Cajamarca.",
       "consultado": "2026-11-14"
     },
     {
       "id": "fao_agua",
       "institucion": "FAO",
-      "titulo": "Irrigation Water Management: Crop Water Needs, capítulo 3",
+      "titulo": "Irrigation Water Management: Crop Water Needs, chapter 3",
       "url": "https://www.fao.org/4/S2022E/s2022e07.htm",
-      "seccion": "Introducción y sección 3.3.4",
-      "alcance": "Las necesidades de agua dependen del clima, cultivo y etapa de crecimiento; sus rangos son orientativos, no una calibración local.",
+      "seccion": "Introduction and section 3.3.4",
+      "alcance": "Water needs depend on climate, crop and growth stage; the ranges are guidance, not local calibration.",
       "consultado": "2026-11-14"
     },
     {
@@ -33,8 +33,8 @@
       "institucion": "INIA Chile",
       "titulo": "Haba — Nogal Orgánico",
       "url": "https://sitios.inia.cl/nogalorganico/cubiertas-vegetales/haba/",
-      "seccion": "Ventajas, desventajas y utilización",
-      "alcance": "Respalda el potencial de aporte de nitrógeno y materia orgánica del haba como abono verde. El manejo en Chile no valida calendarios ni dosis para Perú.",
+      "seccion": "Advantages, disadvantages and use",
+      "alcance": "Supports the potential of faba bean as green manure to supply nitrogen and organic matter. Management in Chile does not validate calendars or application rates for Peru.",
       "consultado": "2026-11-14"
     },
     {
@@ -42,17 +42,17 @@
       "institucion": "INIA Perú",
       "titulo": "Manejo de pastos asociados anuales para la alimentación de ganado lechero (2021)",
       "url": "https://repositorio.inia.gob.pe/handle/20.500.12955/1298",
-      "seccion": "Resumen del registro institucional",
-      "alcance": "Describe avena, vicia y arveja asociadas para ganado de la sierra. No ensaya la rotación B ni demuestra su rentabilidad.",
+      "seccion": "Abstract of the institutional repository record",
+      "alcance": "Describes oats, vetch and peas grown together for highland livestock. Does not test rotation B or establish its profitability.",
       "consultado": "2026-11-14"
     },
     {
       "id": "fao_tarwi",
       "institucion": "FAO Ecocrop",
-      "titulo": "Lupinus mutabilis — código 7435",
+      "titulo": "Lupinus mutabilis — code 7435",
       "url": "https://ecocrop.apps.fao.org/ecocrop/srv/en/cropView?id=7435",
-      "seccion": "Notes: KILLING T y FURTHER INF",
-      "alcance": "Respalda fijación de nitrógeno y advierte sensibilidad de plantas jóvenes a heladas y al exceso de humedad. No demuestra ahorro de agua frente a la rotación A.",
+      "seccion": "Notes: KILLING T and FURTHER INF",
+      "alcance": "Supports nitrogen fixation and warns that young plants are sensitive to frost and excess moisture. Does not demonstrate water savings relative to rotation A.",
       "consultado": "2026-11-14"
     },
     {
@@ -60,33 +60,33 @@
       "institucion": "INIA Perú",
       "titulo": "Tecnología de producción de semilla de vicia forrajera (2013)",
       "url": "https://repositorio.inia.gob.pe/handle/20.500.12955/159",
-      "seccion": "Resumen del registro institucional",
-      "alcance": "Identifica Vicia sativa como leguminosa forrajera utilizada en Junín. No valida la secuencia C para toda la sierra.",
+      "seccion": "Abstract of the institutional repository record",
+      "alcance": "Identifies Vicia sativa as a forage legume used in Junín. Does not validate sequence C across the highlands.",
       "consultado": "2026-11-14"
     }
   ],
   "fichas": [
     {
       "rotacion": "A",
-      "secuencia": "Papa → Maíz → Trigo → Descanso",
-      "por_que": "Sirve como referencia para comparar la propuesta del equipo con alternativas que incorporan leguminosas y forraje. El nombre Tradicional no implica que se haya verificado su uso en cada comunidad.",
+      "secuencia": "Potato → Maize → Wheat → Fallow",
+      "por_que": "A reference for comparing the team’s proposal with alternatives that include legumes and forage. The name Traditional does not imply that its use has been verified in every community.",
       "beneficios": [
         {
-          "texto": "Alternar especies permite planificar el manejo de nutrientes y problemas sanitarios; el beneficio depende de los cultivos y de su manejo.",
+          "texto": "Alternating species helps plan nutrient and crop health management; benefits depend on the crops and how they are managed.",
           "fuentes": [
             "fao_bpa"
           ]
         }
       ],
       "limites": [
-        "Esta secuencia no incluye una leguminosa cultivada para fijar nitrógeno. El descanso, por sí solo, no garantiza recuperar la fertilidad.",
-        "Si el terreno queda desnudo durante el descanso, puede perder suelo con la lluvia; hace falta verificar la cobertura real.",
-        "El puntaje de agua compara demanda estimada por campaña sembrada: un año sin cosecha no se contabiliza como ahorro."
+        "This sequence has no cultivated nitrogen-fixing legume. Fallow alone does not guarantee fertility recovery.",
+        "If land is left bare during fallow, rainfall can remove soil; actual ground cover needs to be checked.",
+        "The water score compares estimated demand per planted growing season: a year without a harvest is not counted as water savings."
       ],
       "revisar": [
-        "¿Qué se cultiva realmente en la parcela y qué problemas sanitarios se repiten?",
-        "¿Se mantienen cobertura y residuos durante el descanso?",
-        "¿Hay agua suficiente para la papa y el maíz durante sus etapas sensibles?"
+        "What is actually grown on the plot, and which crop health problems recur?",
+        "Are ground cover and residues maintained during fallow?",
+        "Is there enough water for potato and maize during sensitive growth stages?"
       ],
       "fuentes": [
         "fao_bpa",
@@ -95,32 +95,32 @@
     },
     {
       "rotacion": "B",
-      "secuencia": "Papa → Haba → Cebada → Avena forrajera",
-      "por_que": "Es una opción a explorar cuando se priorizan el cuidado del suelo y el alimento para el ganado. Su posición en la comparación depende del clima y de sus prioridades.",
+      "secuencia": "Potato → Faba bean → Barley → Forage oats",
+      "por_que": "An option to explore when soil care and livestock feed are priorities. Its ranking depends on the climate and your priorities.",
       "beneficios": [
         {
-          "texto": "El haba puede aportar nitrógeno mediante su asociación con bacterias. Lo que queda para el cultivo siguiente depende de los residuos que se devuelvan al suelo y de lo que se retire en la cosecha.",
+          "texto": "Faba bean can fix nitrogen through its association with bacteria. What remains for the next crop depends on residues returned to the soil and material removed at harvest.",
           "fuentes": [
             "inia_haba",
             "fao_bpa"
           ]
         },
         {
-          "texto": "La avena ofrece una alternativa de forraje documentada en sistemas ganaderos de la sierra. Esto no garantiza mayor producción de leche ni ingresos.",
+          "texto": "Oats offer a documented forage option in highland livestock systems. This does not guarantee higher milk production or income.",
           "fuentes": [
             "inia_pastos"
           ]
         }
       ],
       "limites": [
-        "La evidencia del haba como abono verde no equivale a una cosecha de grano: no se debe asumir el mismo aporte de nitrógeno.",
-        "Retirar todo el forraje puede disminuir los residuos que protegen el suelo.",
-        "La aptitud del haba como alimento animal debe revisarse: el modelo le asigna valor forrajero, pero la fuente de INIA Chile consultada no recomienda ese uso en su contexto."
+        "Evidence for faba bean as green manure does not imply the same nitrogen contribution when it is harvested for grain.",
+        "Removing all forage can reduce the residues that protect the soil.",
+        "Faba bean suitability as animal feed needs review: the model assigns forage value, but the consulted INIA Chile source does not recommend that use in its context."
       ],
       "revisar": [
-        "¿El haba se cosechará para grano o se manejará como abono verde?",
-        "¿Qué parte de los residuos quedará en el terreno?",
-        "¿Qué variedades de avena y cebada se adaptan al lugar y cuándo conviene cortarlas?"
+        "Will faba bean be harvested for grain or managed as green manure?",
+        "What share of residues will remain on the land?",
+        "Which oat and barley varieties suit the location, and when should they be cut?"
       ],
       "fuentes": [
         "inia_haba",
@@ -131,18 +131,18 @@
     },
     {
       "rotacion": "C",
-      "secuencia": "Papa → Tarwi → Trigo → Vicia sativa",
-      "por_que": "Explora una combinación con dos leguminosas y una especie forrajera. Agua eficiente es el nombre de una alternativa del modelo; todavía no demuestra menor consumo de agua en la parcela.",
+      "secuencia": "Potato → Andean lupin (tarwi) → Wheat → Common vetch",
+      "por_que": "Explores a combination of two legumes and a forage species. Water efficient names a model alternative; lower water use on the plot has not yet been demonstrated.",
       "beneficios": [
         {
-          "texto": "El tarwi puede fijar nitrógeno; el aporte disponible para otros cultivos depende del manejo y de las condiciones del suelo.",
+          "texto": "Andean lupin can fix nitrogen; the amount available to other crops depends on management and soil conditions.",
           "fuentes": [
             "fao_tarwi",
             "fao_bpa"
           ]
         },
         {
-          "texto": "La vicia se utiliza como leguminosa forrajera en la sierra. Mantener cobertura y residuos puede ayudar a proteger el suelo de la erosión.",
+          "texto": "Vetch is used as a forage legume in the highlands. Maintaining ground cover and residues can help protect soil from erosion.",
           "fuentes": [
             "inia_vicia",
             "fao_bpa"
@@ -150,14 +150,14 @@
         }
       ],
       "limites": [
-        "No hay validación local de que esta secuencia completa ahorre agua frente a las otras dos. La menor demanda surge de parámetros estimados del equipo.",
-        "El tarwi joven puede ser sensible a heladas y el cultivo al exceso de humedad; no debe presentarse como resistente en cualquier condición.",
-        "Cortar y retirar la vicia como forraje cambia el aporte de residuos y nutrientes respecto a dejarla como cobertura o abono verde."
+        "There is no local validation that this full sequence saves water compared with the other two. Lower demand comes from estimated team parameters.",
+        "Young Andean lupin plants may be sensitive to frost, and the crop to excess moisture; it should not be presented as resilient under all conditions.",
+        "Cutting and removing vetch as forage changes residue and nutrient inputs compared with leaving it as ground cover or green manure."
       ],
       "revisar": [
-        "¿Hay semilla de tarwi y vicia adaptada a la zona?",
-        "¿El terreno drena bien y qué etapas coinciden con meses de helada?",
-        "¿La vicia se retirará como forraje o se devolverá al suelo?"
+        "Are locally adapted Andean lupin and vetch seeds available?",
+        "Does the land drain well, and which growth stages coincide with frost months?",
+        "Will vetch be removed as forage or returned to the soil?"
       ],
       "fuentes": [
         "fao_tarwi",

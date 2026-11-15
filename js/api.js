@@ -213,16 +213,16 @@ export async function fetchSrtmSlope(lat, lon, { index, fetchImpl = globalThis.f
 export function zoneSlope(terrain) {
   const mediana = terrain?.pendiente_pct?.mediana;
   if (!Number.isFinite(mediana)) return null;
-  return { pendiente_pct: mediana, fuente: `${SRTM_FUENTE}, mediana de la zona del piloto`, zona: true };
+  return { pendiente_pct: mediana, fuente: `${SRTM_FUENTE}, pilot area median`, zona: true };
 }
 
 /** Plain-language note on how much of the pilot zone is steep, or null without SRTM statistics. */
 export function zoneSteepNote(terrain, pilotName) {
   const pct = terrain?.pct_area_pendiente_mayor_25;
   if (!Number.isFinite(pct)) return null;
-  const parte = pct >= 30 ? "una buena parte" : pct >= 10 ? "una parte" : "muy poco";
-  return `Alrededor del punto piloto ${pilotName}, ${parte} del terreno (${Math.round(pct)} %) son laderas fuertes, ` +
-    "de más de 25 % de pendiente, según el satélite SRTM de la NASA.";
+  const parte = pct >= 30 ? "a substantial share" : pct >= 10 ? "a share" : "a very small share";
+  return `Around the ${pilotName} pilot site, ${parte} of the terrain (${Math.round(pct)} %) consists of steep slopes, ` +
+    "with slopes above 25 %, according to NASA SRTM.";
 }
 
 /**
@@ -256,11 +256,11 @@ export async function fetchClimate(
   let fuente;
   try {
     body = await getJson(buildPowerUrl(lat, lon), fetchImpl);
-    fuente = "NASA POWER (en línea)";
+    fuente = "NASA POWER (online)";
   } catch (liveError) {
     if (!pilotId) throw liveError;
     body = await getJson(new URL(`power_cache/${pilotId}.json`, DATA_BASE).href, fetchImpl);
-    fuente = "NASA POWER (copia guardada)";
+    fuente = "NASA POWER (cached copy)";
   }
 
   const power = body.properties?.parameter ?? body;
@@ -270,10 +270,10 @@ export async function fetchClimate(
   return {
     clima: climateFromPower(power, climateBias),
     elevation: pointElevation ?? cellElevation,
-    elevationSource: pointElevation !== null ? "Copernicus DEM 90 m (Open-Meteo)" : "NASA POWER (celda ~50 km)",
+    elevationSource: pointElevation !== null ? "Copernicus DEM 90 m (Open-Meteo)" : "NASA POWER (~50 km grid cell)",
     corregido,
     periodoCorreccion,
-    fuente: corregido ? `${fuente}, ${fuenteCorreccion ?? "corregido con datos locales (SENAMHI PISCO)"}` : fuente,
+    fuente: corregido ? `${fuente}, ${fuenteCorreccion ?? "adjusted with local data (SENAMHI PISCO)"}` : fuente,
   };
 }
 
@@ -318,15 +318,15 @@ export function circleRing(lat, lon, radiusKm, n = 64) {
 
 export function checkAltitude(elevationM, min = 2500) {
   if (!Number.isFinite(elevationM)) {
-    return { ok: false, mensaje: "No pudimos confirmar la altitud de este punto." };
+    return { ok: false, mensaje: "We could not confirm the elevation of this point." };
   }
   if (elevationM < min) {
     return {
       ok: false,
-      mensaje: `Este punto está a ${Math.round(elevationM)} m. La herramienta es para zonas sobre ${min} m; los resultados no serían confiables aquí.`,
+      mensaje: `This point is at ${Math.round(elevationM)} m. The tool is intended for areas above ${min} m; results here would be unreliable.`,
     };
   }
-  return { ok: true, mensaje: `Altitud: ${Math.round(elevationM)} m.` };
+  return { ok: true, mensaje: `Elevation: ${Math.round(elevationM)} m.` };
 }
 
 /** Ray casting: is [lon, lat] inside a GeoJSON polygon (array of rings, first ring = outer, others = holes)? */
@@ -375,7 +375,7 @@ export const SEARCH_MIN_INTERVAL_MS = 1000;
  * `{ south, west, north, east }` (the selectable area), so a "Cajamarca" elsewhere is never returned.
  */
 export function buildSearchUrl(query, bounds = null) {
-  const params = { q: query.trim(), format: "jsonv2", countrycodes: "pe", limit: "5", "accept-language": "es" };
+  const params = { q: query.trim(), format: "jsonv2", countrycodes: "pe", limit: "5", "accept-language": "en" };
   if (bounds) {
     params.viewbox = [bounds.west, bounds.north, bounds.east, bounds.south].join(",");
     params.bounded = "1";
@@ -396,7 +396,7 @@ export function parseSearchResults(body) {
     .map((r) => {
       const parts = String(r.display_name ?? "").split(",").map((s) => s.trim()).filter(Boolean);
       return {
-        nombre: r.name || parts[0] || "Lugar sin nombre",
+        nombre: r.name || parts[0] || "Unnamed place",
         detalle: parts.slice(1).filter((p) => !/^\d+$/.test(p) && p !== "Perú").join(", "),
         lat: Number(r.lat),
         lon: Number(r.lon),
@@ -422,6 +422,6 @@ export function fallbackAssessment(km, pilotName) {
     corregido: near,
     aviso: near
       ? null
-      : `No pudimos calcular la corrección local para este punto; usamos la de ${pilotName}, a ${Math.round(km)} km. Tómelo como referencia.`,
+      : `We could not calculate the local correction for this point; using the one from ${pilotName}, ${Math.round(km)} km away. Treat it as a reference.`,
   };
 }

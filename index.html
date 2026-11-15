@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="es" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="SowOrbit compara rotaciones de cultivo para la sierra del Perú con datos de clima de la NASA.">
+  <meta name="description" content="SowOrbit compares crop rotations for the Peruvian highlands using NASA climate data.">
   <title>SowOrbit</title>
   <!-- Apply the saved theme before first paint so the page never flashes the wrong one. -->
   <script>
@@ -16,20 +16,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Unbounded:wght@500;600&display=swap">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="css/styles.css?v=202611151211">
+  <link rel="stylesheet" href="css/styles.css?v=202611151449">
   <!-- Asset version: bump with `npm run bump` before each deploy so cached old modules are never mixed with new ones. -->
   <script type="importmap">
     {
       "imports": {
-        "./js/api.js": "./js/api.js?v=202611151211",
-        "./js/charts.js": "./js/charts.js?v=202611151211",
-        "./js/ficha.js": "./js/ficha.js?v=202611151211",
-        "./js/glossary.js": "./js/glossary.js?v=202611151211",
-        "./js/icons.js": "./js/icons.js?v=202611151211",
-        "./js/pdf.js": "./js/pdf.js?v=202611151211",
-        "./js/pisco.js": "./js/pisco.js?v=202611151211",
-        "./js/results.js": "./js/results.js?v=202611151211",
-        "./js/scoring.js": "./js/scoring.js?v=202611151211"
+        "./js/api.js": "./js/api.js?v=202611151449",
+        "./js/charts.js": "./js/charts.js?v=202611151449",
+        "./js/ficha.js": "./js/ficha.js?v=202611151449",
+        "./js/glossary.js": "./js/glossary.js?v=202611151449",
+        "./js/icons.js": "./js/icons.js?v=202611151449",
+        "./js/pdf.js": "./js/pdf.js?v=202611151449",
+        "./js/pisco.js": "./js/pisco.js?v=202611151449",
+        "./js/results.js": "./js/results.js?v=202611151449",
+        "./js/scoring.js": "./js/scoring.js?v=202611151449"
       }
     }
   </script>
@@ -51,28 +51,28 @@
       </g>
     </svg>
     <p class="splash-name">SowOrbit</p>
-    <p id="splash-msg" class="splash-msg">Cargando el mapa y los datos…</p>
+    <p id="splash-msg" class="splash-msg">Loading the map and data…</p>
   </div>
 
-  <!-- Short introduction shown after loading; "Empezar" opens the tool. -->
+  <!-- Short introduction shown after loading; "Get started" opens the tool. -->
   <div id="welcome" class="welcome" hidden>
     <div class="welcome-card" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
-      <p class="eyebrow">Datos de la NASA para la sierra del Perú</p>
-      <h2 id="welcome-title">Sepa qué rotación de cultivos le conviene a su parcela</h2>
+      <p class="eyebrow">NASA data for the Peruvian highlands</p>
+      <h2 id="welcome-title">Find a crop rotation that suits your plot</h2>
       <p class="welcome-lead">
-        SowOrbit compara tres rotaciones de cultivo con más de 30 años de clima medido por satélite
-        y corregido con datos del SENAMHI.
+        SowOrbit compares three crop rotations using over 30 years of NASA climate data
+        adjusted with SENAMHI data.
       </p>
       <ol class="welcome-steps">
-        <li><span>1</span> Marque su parcela en el mapa.</li>
-        <li><span>2</span> Diga qué es lo más importante para usted.</li>
-        <li><span>3</span> Compare las tres rotaciones y descargue su ficha.</li>
+        <li><span>1</span> Mark your plot on the map.</li>
+        <li><span>2</span> Tell us what matters most to you.</li>
+        <li><span>3</span> Compare the three rotations and download your report.</li>
       </ol>
       <button type="button" id="start" class="btn btn-primary btn-lg">
-        Empezar
+        Get started
         <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
       </button>
-      <p class="welcome-note">Esta herramienta apoya, no reemplaza, al técnico agrario local.</p>
+      <p class="welcome-note">This tool supports, but does not replace, your local agricultural advisor.</p>
     </div>
   </div>
 
@@ -92,19 +92,19 @@
           </circle>
         </g>
       </svg>
-      <p class="overlay-title">Preparando sus resultados</p>
+      <p class="overlay-title">Preparing your results</p>
       <ul id="loader-steps" class="loader-steps">
-        <li>Leyendo 30 años de clima de la NASA</li>
-        <li>Ajustando con datos locales del SENAMHI</li>
-        <li>Midiendo la pendiente de su terreno</li>
-        <li>Comparando las tres rotaciones</li>
+        <li>Reading 30 years of NASA climate data</li>
+        <li>Adjusting with local SENAMHI data</li>
+        <li>Measuring your terrain slope</li>
+        <li>Comparing the three rotations</li>
       </ul>
       <p id="loader-msg" class="loader-msg"></p>
     </div>
   </div>
 
   <header class="top">
-    <a class="brand" href="./" aria-label="SowOrbit, inicio">
+    <a class="brand" href="./" aria-label="SowOrbit, home">
       <svg class="brand-mark" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
         <ellipse class="orbit-ring" cx="16" cy="16" rx="14" ry="6" transform="rotate(-24 16 16)"/>
         <path class="seed-body" d="M16 10.5c3 2.5 4.5 5 4.5 7.500a4.500 4.500 0 0 1-9 0c0-2.500 1.500-5 4.500-7.500z"/>
@@ -112,21 +112,21 @@
       </svg>
       <span class="brand-name">SowOrbit</span>
     </a>
-    <nav class="steps" aria-label="Secciones">
+    <nav class="steps" aria-label="Sections">
       <button type="button" data-step="inicio" aria-current="step">
         <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.600-6.500-10.500a6.500 6.500 0 0 1 13 0C18.500 15.400 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.3"/></svg>
-        <span>Parcela</span>
+        <span>Plot</span>
       </button>
       <button type="button" data-step="resultados">
         <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M6 20v-8"/><path d="M12 20V5"/><path d="M18 20v-11"/></svg>
-        <span>Resultados</span>
+        <span>Results</span>
       </button>
       <button type="button" data-step="glosario">
         <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h11a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg>
-        <span>Glosario</span>
+        <span>Glossary</span>
       </button>
     </nav>
-    <button type="button" id="theme-toggle" class="icon-btn" aria-label="Cambiar a modo claro" title="Cambiar a modo claro"></button>
+    <button type="button" id="theme-toggle" class="icon-btn" aria-label="Switch to light mode" title="Switch to light mode"></button>
   </header>
 
   <main>
@@ -135,56 +135,56 @@
     <!-- data-stage: "place" shows step 1 only, "priorities" shows step 2 only (see setStage in js/ui.js). -->
     <section id="step-inicio" class="step split" data-stage="place">
       <div class="split-map">
-        <div id="map" role="application" aria-label="Mapa de la parcela"></div>
+        <div id="map" role="application" aria-label="Plot map"></div>
         <div class="map-overlay">
           <p class="map-legend">
-            <span><span class="swatch swatch-ok" aria-hidden="true"></span> Sierra con datos (sobre 2 500 m)</span>
-            <span><span class="swatch swatch-off" aria-hidden="true"></span> Todavía sin datos</span>
+            <span><span class="swatch swatch-ok" aria-hidden="true"></span> Highlands with data (above 2,500 m)</span>
+            <span><span class="swatch swatch-off" aria-hidden="true"></span> Data not yet available</span>
           </p>
-          <p class="map-note">Los datos de clima describen la zona (unos 10 km a la redonda), no su parcela exacta.</p>
+          <p class="map-note">Climate data describe the surrounding area (roughly 10 km), rather than your exact plot.</p>
         </div>
       </div>
 
-      <aside class="panel" aria-label="Parcela y prioridades">
+      <aside class="panel" aria-label="Plot and priorities">
         <div class="split-place">
-          <h2 class="panel-title"><span class="num">1</span> Elija su parcela</h2>
+          <h2 class="panel-title"><span class="num">1</span> Choose your plot</h2>
           <form id="search" class="search" role="search">
-            <label for="search-q" class="visually-hidden">Buscar su pueblo o distrito</label>
+            <label for="search-q" class="visually-hidden">Search for your town or district</label>
             <div class="search-row">
               <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>
-              <input id="search-q" type="search" placeholder="Buscar su pueblo o distrito" autocomplete="off" required>
-              <button type="submit">Buscar</button>
+              <input id="search-q" type="search" placeholder="Search for your town or district" autocomplete="off" required>
+              <button type="submit">Search</button>
             </div>
             <p id="search-msg" class="search-msg" aria-live="polite"></p>
             <ul id="search-results" class="search-results"></ul>
           </form>
-          <p class="hint">O elija una zona y toque el mapa dentro del área verde.</p>
+          <p class="hint">Or choose an area and tap the map within the green zone.</p>
           <div id="pilots" class="chips"></div>
-          <p id="coords" class="coords" aria-live="polite">Aún no eligió un punto.</p>
+          <p id="coords" class="coords" aria-live="polite">No point selected yet.</p>
           <p id="map-msg" class="msg" aria-live="polite"></p>
         </div>
 
         <!-- Own block so that on phones it sits below the map, where the farmer just tapped. -->
         <div class="split-next">
           <button type="button" id="to-prioridades" class="btn btn-primary btn-lg btn-block" disabled>
-            Continuar
+            Continue
             <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
           </button>
-          <p id="cta-hint" class="hint cta-hint">Primero marque su parcela en el mapa.</p>
+          <p id="cta-hint" class="hint cta-hint">First mark your plot on the map.</p>
         </div>
 
         <div class="split-priorities">
           <button type="button" id="back-to-place" class="btn btn-ghost btn-back">
             <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
-            Cambiar parcela
+            Change plot
           </button>
           <p id="place-summary" class="coords is-set"></p>
-          <h2 class="panel-title" id="priorities-title" tabindex="-1"><span class="num">2</span> ¿Qué es lo más importante para usted?</h2>
-          <p class="hint">Mueva cada barra: 0 es nada importante, 5 es muy importante. Si deja todas en 0, todo cuenta igual.</p>
+          <h2 class="panel-title" id="priorities-title" tabindex="-1"><span class="num">2</span> What matters most to you?</h2>
+          <p class="hint">Move each slider: 0 means not important, 5 means very important. If all are 0, every criterion has equal weight.</p>
           <div id="sliders"></div>
           <p id="status" class="msg" aria-live="polite"></p>
           <button type="button" id="to-resultados" class="btn btn-primary btn-lg btn-block">
-            Ver resultados
+            View results
             <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
           </button>
         </div>
@@ -194,68 +194,68 @@
     <section id="step-resultados" class="step page" hidden>
       <div class="page-head">
         <div>
-          <p class="eyebrow">Resultados para su parcela</p>
-          <h2>Rotaciones recomendadas</h2>
+          <p class="eyebrow">Results for your plot</p>
+          <h2>Recommended rotations</h2>
           <p id="results-place" class="hint"></p>
         </div>
         <button type="button" id="export-all" class="btn btn-ghost" hidden>
           <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7.5 11l4.5 4.5 4.5-4.5"/><path d="M5 20h14"/></svg>
-          Descargar las tres fichas (PDF)
+          Download all three reports (PDF)
         </button>
       </div>
 
       <div id="results-empty" class="empty">
-        <p>Todavía no hay resultados. Marque su parcela en el mapa y toque «Ver resultados».</p>
-        <button type="button" class="btn btn-primary" data-go="inicio">Ir al mapa</button>
+        <p>No results yet. Mark your plot on the map and select “View results”.</p>
+        <button type="button" class="btn btn-primary" data-go="inicio">Go to map</button>
       </div>
 
       <p id="frost-banner" class="notice notice-warn" role="note" hidden>
-        <strong>Las heladas pueden ser más frecuentes de lo que se muestra.</strong>
-        Este punto no tiene corrección con datos locales. En Cajamarca, las temperaturas mínimas de NASA POWER
-        salen entre 2 y 4 °C más altas que las de SENAMHI (PISCO): POWER no registra ninguna helada entre 1991 y 2024,
-        mientras que los datos locales muestran helada en julio en 58 de cada 100 años.
-        Para un resultado más confiable, elija un punto piloto.
+        <strong>Frost may occur more often than shown.</strong>
+        This point has no local correction. In Cajamarca, NASA POWER minimum temperatures
+        are 2–4 °C higher than SENAMHI (PISCO) values: POWER records no frost between 1991 and 2024,
+        while local data show July frost in 58 out of 100 years.
+        Choose a pilot site for a more reliable result.
       </p>
 
       <!-- Left: one card per rotation. Right: everything about the selected one. -->
       <div id="results-layout" class="results-layout" hidden>
-        <div id="rotation-list" class="rotation-list" role="tablist" aria-label="Rotaciones comparadas"></div>
+        <div id="rotation-list" class="rotation-list" role="tablist" aria-label="Compared rotations"></div>
         <div id="rotation-detail" class="rotation-detail" role="tabpanel" tabindex="-1"></div>
       </div>
 
       <section id="before-sowing" class="notice notice-info" hidden>
-        <h3>Antes de sembrar</h3>
+        <h3>Before planting</h3>
         <p>
-          Estos datos son del promedio de su zona y de lo que pasó en años anteriores; no son un pronóstico.
-          Si su chacra está en una parte baja donde se junta el frío, o si su semilla es de las que aguantan más helada,
-          téngalo en cuenta.
+          These data represent area averages and past years; they are not a forecast.
+          Consider whether your plot lies in a hollow where cold air collects,
+          or whether your crop variety tolerates more frost.
         </p>
-        <p>"Helada" aquí significa una noche bajo 2 °C medidos a 2 m del suelo; a ras del suelo hace más frío.</p>
+        <p>Here, “frost” means a night below 2 °C measured 2 m above ground; temperatures are colder at ground level.</p>
         <p id="slope-note" hidden></p>
-        <p id="estimated-note" hidden>Los datos de los cultivos son estimaciones de estudios publicados, todavía sin validar en campo.</p>
+        <p id="estimated-note" hidden>Crop parameters are estimates from published studies and have not yet been validated in the field.</p>
         <ul id="common-notes"></ul>
-        <p>Si tiene dudas, un técnico de la agencia agraria puede ayudarle a confirmarlo.</p>
+        <p>If you have questions, a local agricultural advisor can help you check.</p>
       </section>
     </section>
 
     <section id="step-glosario" class="step page" hidden>
       <div class="page-head">
         <div>
-          <p class="eyebrow">Glosario</p>
-          <h2>Las palabras que usa SowOrbit</h2>
-          <p class="hint">Busque una palabra o elija un tema.</p>
+          <p class="eyebrow">Glossary</p>
+          <h2>Terms used in SowOrbit</h2>
+          <p class="hint">Search for a word or choose a topic.</p>
         </div>
       </div>
       <div class="glossary-tools">
-        <label for="glossary-q" class="visually-hidden">Buscar en el glosario</label>
+        <label for="glossary-q" class="visually-hidden">Search the glossary</label>
         <div class="search-row">
           <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>
-          <input id="glossary-q" type="search" placeholder="Buscar una palabra, por ejemplo: helada" autocomplete="off">
+          <input id="glossary-q" type="search" placeholder="Search for a word, for example: frost" autocomplete="off">
         </div>
-        <div id="glossary-cats" class="chips" role="group" aria-label="Temas del glosario"></div>
+        <div id="glossary-cats" class="chips" role="group" aria-label="Glossary topics"></div>
       </div>
       <p id="glossary-count" class="hint" aria-live="polite"></p>
-      <div id="glossary">Cargando el glosario…</div>
+      <div id="glossary">Loading the glossary…</div>
     </section>
   </main>
 
@@ -263,6 +263,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script type="module" src="js/ui.js?v=202611151211"></script>
+  <script type="module" src="js/ui.js?v=202611151449"></script>
 </body>
 </html>

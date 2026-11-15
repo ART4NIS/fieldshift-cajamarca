@@ -29,7 +29,7 @@ function draw(canvas, config) {
   return chart;
 }
 
-const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+const MESES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /**
  * data: output of calendarioRiesgos(clima) -> [{ mes, helada, sequia, calor }].
@@ -48,9 +48,9 @@ export function renderRiskCalendar(canvas, data, mesesEnCampo = null) {
     data: {
       labels: data.map((d) => MESES[d.mes - 1]),
       datasets: [
-        serie("Helada", "helada", cssVar("--chart-frost", "#7db9ff")),
-        serie("Falta de lluvia", "sequia", cssVar("--chart-dry", "#f2c94c")),
-        serie("Calor", "calor", cssVar("--chart-heat", "#ff7b72")),
+        serie("Frost", "helada", cssVar("--chart-frost", "#7db9ff")),
+        serie("Low rainfall", "sequia", cssVar("--chart-dry", "#f2c94c")),
+        serie("Heat", "calor", cssVar("--chart-heat", "#ff7b72")),
       ],
     },
     options: {
@@ -59,13 +59,13 @@ export function renderRiskCalendar(canvas, data, mesesEnCampo = null) {
       plugins: { legend: { labels: { usePointStyle: true, pointStyle: "rectRounded" } } },
       scales: {
         x: { grid: { display: false } },
-        y: { min: 0, max: 100, ticks: { stepSize: 25 }, title: { display: true, text: "Nivel de riesgo (0 a 100)" } },
+        y: { min: 0, max: 100, ticks: { stepSize: 25 }, title: { display: true, text: "Risk indicator (0 to 100)" } },
       },
     },
   });
 }
 
-const RADAR_LABELS = { agua: "Agua", suelo: "Suelo", erosion: "Erosión", forraje: "Forraje", clima: "Clima" };
+const RADAR_LABELS = { agua: "Water", suelo: "Soil", erosion: "Erosion", forraje: "Forage", clima: "Climate" };
 
 /** results: output of evaluarRotaciones(...). The rotation `selectedId` is highlighted; the rest are faint. */
 export function renderRadar(canvas, results, selectedId = null) {

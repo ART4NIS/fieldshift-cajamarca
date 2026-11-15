@@ -77,32 +77,32 @@ test("confidence levels follow the available data", () => {
 
 test("warnings explain missing data and frost months", () => {
   const [r] = evaluarRotaciones(clima, cultivos, rotaciones, {}, {});
-  assert.ok(r.avisos.some((a) => a.includes("sin corrección local")));
-  assert.ok(r.avisos.some((a) => a.includes("Pendiente")));
-  assert.ok(r.avisos.some((a) => /helada (frecuente|la mayoría|todos)/.test(a)));
-  assert.ok(r.avisos.every((a) => !a.includes("técnico")), "per-crop warnings no longer defer to a technician");
+  assert.ok(r.avisos.some((a) => a.includes("no local correction")));
+  assert.ok(r.avisos.some((a) => a.includes("slope")));
+  assert.ok(r.avisos.some((a) => /frost (frequent|most|every)/.test(a)));
+  assert.ok(r.avisos.every((a) => !a.includes("advisor")), "per-crop warnings no longer defer to a technician");
 });
 
 test("frost frequency uses plain words and fixed rounded fractions", () => {
-  assert.equal(frecuenciaHelada(0.31), "frecuente (1 de cada 3 años)");
-  assert.equal(frecuenciaHelada(0.25), "frecuente (1 de cada 3 años)");
-  assert.equal(frecuenciaHelada(0.58), "la mayoría de los años");
-  assert.equal(frecuenciaHelada(1), "todos los años");
-  assert.equal(frecuenciaHelada(0.12), "algunos años (1 de cada 5)");
-  assert.equal(frecuenciaHelada(0), "rara (menos de 1 año de cada 10)");
+  assert.equal(frecuenciaHelada(0.31), "frequent (1 in 3 years)");
+  assert.equal(frecuenciaHelada(0.25), "frequent (1 in 3 years)");
+  assert.equal(frecuenciaHelada(0.58), "most years");
+  assert.equal(frecuenciaHelada(1), "every year");
+  assert.equal(frecuenciaHelada(0.12), "some years (1 in 5)");
+  assert.equal(frecuenciaHelada(0), "rare (less than 1 in 10 years)");
 });
 
 test("cold tolerance distinguishes sensitive from hardy crops", () => {
-  assert.equal(toleranciaFrio(-1), "Es muy sensible al frío.");
-  assert.equal(toleranciaFrio(-3), "Aguanta heladas suaves.");
-  assert.equal(toleranciaFrio(-5), "Aguanta bien las heladas.");
+  assert.equal(toleranciaFrio(-1), "It is very sensitive to cold.");
+  assert.equal(toleranciaFrio(-3), "It tolerates mild frost.");
+  assert.equal(toleranciaFrio(-5), "It tolerates frost well.");
 });
 
 test("frost warning groups months that share a frequency", () => {
   const txt = avisoHeladaCultivo("Papa", [{ mes: 7, prob: 0.58 }, { mes: 8, prob: 0.6 }, { mes: 11, prob: 0.31 }], -1);
   assert.equal(
     txt,
-    "Papa: en julio y agosto, helada la mayoría de los años; en noviembre, helada frecuente (1 de cada 3 años). Es muy sensible al frío.",
+    "Papa: in July and August, frost most years; in November, frost frequent (1 in 3 years). It is very sensitive to cold.",
   );
 });
 

@@ -32,9 +32,9 @@ export function pdfText(texto) {
     .replace(/[^\x00-\xff]/g, "");
 }
 
-/** "soworbit-rotacion-b.pdf" / "soworbit-rotaciones.pdf" */
+/** "soworbit-rotation-b.pdf" / "soworbit-rotations.pdf" */
 export function nombreArchivo(fichas) {
-  return fichas.length === 1 ? `soworbit-rotacion-${fichas[0].id.toLowerCase()}.pdf` : "soworbit-rotaciones.pdf";
+  return fichas.length === 1 ? `soworbit-rotation-${fichas[0].id.toLowerCase()}.pdf` : "soworbit-rotations.pdf";
 }
 
 const INK = [19, 28, 46];
@@ -97,7 +97,7 @@ function cover(w, meta) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   doc.setTextColor(190, 205, 228);
-  doc.text(pdfText("Rotaciones de cultivo con datos de la NASA"), MARGIN, 21);
+  doc.text(pdfText("Crop rotations using NASA data"), MARGIN, 21);
   doc.text(pdfText(meta.fecha ?? ""), 210 - MARGIN, 21, { align: "right" });
   w.y = 36;
   if (meta.lugar) w.text(meta.lugar, { size: 9.5, color: MUTED });
@@ -115,9 +115,9 @@ function fichaPage(w, f) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...MUTED);
-  doc.text(pdfText("encaja con sus prioridades"), 210 - MARGIN, top + 12.5, { align: "right" });
-  w.text(f.posicion === 0 ? "Mejor opción para sus prioridades" : `Opción ${f.posicion + 1}`, { size: 8.5, color: MUTED, gap: 0.6 });
-  w.text(`Rotación ${f.id}: ${f.nombre}`, { size: 15, style: "bold", gap: 1 });
+  doc.text(pdfText("matches your priorities"), 210 - MARGIN, top + 12.5, { align: "right" });
+  w.text(f.posicion === 0 ? "Best option for your priorities" : `Option ${f.posicion + 1}`, { size: 8.5, color: MUTED, gap: 0.6 });
+  w.text(`Rotation ${f.id}: ${f.nombre}`, { size: 15, style: "bold", gap: 1 });
   w.text(f.secuencia, { size: 10.5, gap: 2 });
   // Confidence chip, colored by level.
   const color = LEVEL[f.confianza.clase] ?? LEVEL.bajo;
@@ -131,15 +131,15 @@ function fichaPage(w, f) {
   w.y += 8;
   w.text(f.confianza.explicacion, { size: 8.5, color: MUTED, gap: 2.5 });
 
-  w.heading("En pocas palabras");
+  w.heading("At a glance");
   for (const frase of f.resumen) w.text(frase);
   if (f.descripcion) w.text(f.descripcion, { color: MUTED });
 
-  w.heading("La rotación, año por año");
+  w.heading("The rotation, year by year");
   w.bullets(f.anios.map((a) =>
-    `Año ${a.anio}: ${a.nombre}. ${a.detalle}${a.rasgos.length ? `. ${a.rasgos.join(", ")}` : ""}.`));
+    `Year ${a.anio}: ${a.nombre}. ${a.detalle}${a.rasgos.length ? `. ${a.rasgos.join(", ")}` : ""}.`));
 
-  w.heading("Cómo le va en cada cosa");
+  w.heading("Performance by criterion");
   for (const c of f.criterios) {
     w.ensure(8);
     doc.setFont("helvetica", "normal");
@@ -155,31 +155,31 @@ function fichaPage(w, f) {
   }
 
   if (f.avisos.length) {
-    w.heading("Cuidado con las heladas");
+    w.heading("Watch for frost");
     w.bullets(f.avisos);
   }
   if (f.porQue) {
-    w.heading("¿Por qué considerarla?");
+    w.heading("Why consider it?");
     w.text(f.porQue);
     w.bullets(f.beneficios.map((b) => `${b.texto} [${b.instituciones.join("; ")}]`));
   }
   if (f.limites.length || f.faltantes.length) {
-    w.heading("Límites y lo que falta saber");
+    w.heading("Limitations and missing information");
     w.bullets([...f.limites, ...f.faltantes]);
   }
   if (f.revisar.length) {
-    w.heading("Preguntas para revisar en su parcela");
+    w.heading("Questions to check on your plot");
     w.bullets(f.revisar);
   }
-  w.heading("Datos usados en este resultado");
+  w.heading("Data used in this result");
   w.bullets(f.datosUsados, { size: 9 });
-  w.heading("Detalle para el técnico");
+  w.heading("Technical details");
   w.bullets(f.detalleTecnico, { size: 9, color: MUTED });
   if (f.fuentes.length) {
-    w.heading("Fuentes consultadas");
+    w.heading("Sources consulted");
     for (const s of f.fuentes) {
       w.text(`${s.institucion}: ${s.titulo}`, { size: 9, style: "bold", gap: 0.4 });
-      w.text(`${s.seccion}. ${s.alcance} Consultado: ${s.consultado}.`, { size: 8.5, color: MUTED, gap: 0.4 });
+      w.text(`${s.seccion}. ${s.alcance} Accessed: ${s.consultado}.`, { size: 8.5, color: MUTED, gap: 0.4 });
       w.text(s.url, { size: 8.5, color: BLUE, gap: 2 });
     }
   }
@@ -195,7 +195,7 @@ function footers(doc) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...MUTED);
-    doc.text(pdfText("SowOrbit apoya, no reemplaza, al técnico agrario local. Clima histórico, no pronóstico."), MARGIN, 297 - 8.5);
+    doc.text(pdfText("SowOrbit supports local agricultural advisors. Historical climate, not a forecast."), MARGIN, 297 - 8.5);
     doc.text(`${i} / ${pages}`, 210 - MARGIN, 297 - 8.5, { align: "right" });
   }
 }
@@ -218,7 +218,7 @@ export async function exportarPdf(fichas, meta = {}) {
     fichaPage(w, f);
   });
   if (meta.comunes?.length) {
-    w.heading("Antes de sembrar");
+    w.heading("Before planting");
     w.bullets(meta.comunes, { size: 9 });
   }
   footers(doc);

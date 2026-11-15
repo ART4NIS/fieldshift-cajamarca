@@ -47,8 +47,8 @@ const TOLERANCIA_SEQUIA = { baja: 1, media: 0.7, alta: 0.4 };
 const INGRESOS = { alto: 1, medio: 0.6, bajo: 0.3 };
 const DESCANSO = "descanso";
 const MESES = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
@@ -188,20 +188,20 @@ export function nivelConfianza(contexto = {}) {
 
 // Same for every rotation, so the UI shows it once as a banner instead of per card.
 export const AVISO_SIN_CORRECCION =
-  "Temperaturas sin corrección local: NASA POWER suele subestimar las heladas en la sierra.";
+  "Temperatures have no local correction: NASA POWER tends to underestimate frost in the highlands.";
 
 // Same for every rotation, so the UI shows it once in the "before sowing" box.
 export const AVISO_DATOS_ESTIMADOS =
-  "Los datos de los cultivos son estimaciones de literatura y deben validarse con un agrónomo local.";
+  "Crop parameters are literature estimates and must be validated by a local agronomist.";
 
 // Farmer-facing frost frequency: a word plus a fixed, rounded "1 in N years" per band.
 // Natural frequencies are easier to read than percentages; the exact % goes to the technical detail.
 const ESCALA_HELADA = [
-  { min: 0.9, texto: "todos los años" },
-  { min: 0.5, texto: "la mayoría de los años" },
-  { min: 0.25, texto: "frecuente (1 de cada 3 años)" },
-  { min: 0.1, texto: "algunos años (1 de cada 5)" },
-  { min: 0, texto: "rara (menos de 1 año de cada 10)" },
+  { min: 0.9, texto: "every year" },
+  { min: 0.5, texto: "most years" },
+  { min: 0.25, texto: "frequent (1 in 3 years)" },
+  { min: 0.1, texto: "some years (1 in 5)" },
+  { min: 0, texto: "rare (less than 1 in 10 years)" },
 ];
 
 /** Plain-language frost frequency for a probability 0-1. */
@@ -211,21 +211,21 @@ export function frecuenciaHelada(prob) {
 
 /** Plain-language cold tolerance from the crop damage temperature (C). */
 export function toleranciaFrio(tempDanoHelada) {
-  if (tempDanoHelada >= -1) return "Es muy sensible al frío.";
-  if (tempDanoHelada >= -3) return "Aguanta heladas suaves.";
-  return "Aguanta bien las heladas.";
+  if (tempDanoHelada >= -1) return "It is very sensitive to cold.";
+  if (tempDanoHelada >= -3) return "It tolerates mild frost.";
+  return "It tolerates frost well.";
 }
 
-const unirEs = (xs) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} y ${xs.at(-1)}`);
+const joinMonths = (xs) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`);
 
-/** "Papa: en julio y agosto, helada la mayoría de los años; en noviembre, helada frecuente (...). Es muy sensible al frío." */
+/** Groups months by frost frequency, followed by the crop’s cold tolerance. */
 export function avisoHeladaCultivo(nombre, heladas, tempDanoHelada) {
   const grupos = new Map();
   for (const { mes, prob } of heladas) {
     const texto = frecuenciaHelada(prob);
     grupos.set(texto, [...(grupos.get(texto) ?? []), MESES[mes - 1]]);
   }
-  const partes = [...grupos].map(([texto, meses]) => `en ${unirEs(meses)}, helada ${texto}`);
+  const partes = [...grupos].map(([texto, meses]) => `in ${joinMonths(meses)}, frost ${texto}`);
   return `${nombre}: ${partes.join("; ")}. ${toleranciaFrio(tempDanoHelada)}`;
 }
 
@@ -242,7 +242,7 @@ function avisosRotacion(evaluacion, contexto) {
     avisos.push(AVISO_SIN_CORRECCION);
   }
   if (contexto.pendiente_pct == null) {
-    avisos.push(`Pendiente del terreno no disponible: se usó un valor medio de ${PARAMS.pendientePorDefectoPct} %.`);
+    avisos.push(`Terrain slope unavailable: an average value of ${PARAMS.pendientePorDefectoPct} % was used.`);
   }
   if (evaluacion.usa_estimados) {
     avisos.push(AVISO_DATOS_ESTIMADOS);

@@ -676,6 +676,7 @@ p { margin: 0 0 8px; }
 .year-name { font-weight: 700; }
 .year-detail { color: var(--muted); font-size: 0.8rem; }
 .year-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.year-tags .tag { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 
 .stats-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 1180px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

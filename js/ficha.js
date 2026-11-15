@@ -2,47 +2,47 @@
 // Pure functions only (no DOM, no fetch) so the screen and the PDF export share the same content.
 
 const MESES = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 /** Farmer-facing wording of the five criteria. `fuerte` / `debil` are comparisons with the other rotations. */
 export const CRITERIO_INFO = {
-  agua: { label: "Ahorro de agua", corto: "Agua", fuerte: "necesita menos agua", debil: "pide más agua" },
+  agua: { label: "Water savings", corto: "Water", fuerte: "it needs less water", debil: "it needs more water" },
   suelo: {
-    label: "Cuidado del suelo", corto: "Suelo",
-    fuerte: "deja la tierra más fértil", debil: "aporta menos a la fertilidad de la tierra",
+    label: "Soil care", corto: "Soil",
+    fuerte: "it leaves the soil more fertile", debil: "it contributes less to soil fertility",
   },
   erosion: {
-    label: "Tierra protegida de la lluvia", corto: "Erosión",
-    fuerte: "mantiene la tierra más cubierta y protegida de la lluvia", debil: "deja la tierra descubierta más tiempo",
+    label: "Soil protected from rainfall", corto: "Erosion",
+    fuerte: "it keeps soil covered and protected from rainfall", debil: "it leaves soil uncovered for longer",
   },
   forraje: {
-    label: "Pasto para animales", corto: "Forraje",
-    fuerte: "da más pasto para los animales", debil: "da menos pasto para los animales",
+    label: "Feed for livestock", corto: "Forage",
+    fuerte: "it provides more livestock feed", debil: "it provides less livestock feed",
   },
   clima: {
-    label: "Aguante frente al clima", corto: "Clima",
-    fuerte: "sus cultivos aguantan mejor las heladas y la falta de lluvia",
-    debil: "sus cultivos sufren más con las heladas o la falta de lluvia",
+    label: "Climate resilience", corto: "Climate",
+    fuerte: "its crops better tolerate frost and low rainfall",
+    debil: "its crops are more affected by frost or low rainfall",
   },
 };
 
 const CONFIANZA = {
   Alto: {
     clase: "alto",
-    texto: "Confianza alta",
-    explicacion: "El clima está corregido con datos locales y hay datos de satélite del suelo, la vegetación y el terreno.",
+    texto: "High confidence",
+    explicacion: "Climate data are adjusted with local data, and satellite data on soil, vegetation and terrain are available.",
   },
   Medio: {
     clase: "medio",
-    texto: "Confianza media",
-    explicacion: "El clima está corregido con datos locales del SENAMHI. Todavía faltan datos de satélite de la vegetación y la humedad del suelo.",
+    texto: "Medium confidence",
+    explicacion: "Climate data are adjusted with local SENAMHI data. Satellite vegetation and soil moisture data are still missing.",
   },
   Bajo: {
     clase: "bajo",
-    texto: "Confianza baja",
-    explicacion: "El clima viene solo de NASA POWER, sin corrección local: puede mostrar menos heladas de las que hay.",
+    texto: "Low confidence",
+    explicacion: "Climate data come only from NASA POWER, without local correction: frost may be underestimated.",
   },
 };
 
@@ -53,10 +53,10 @@ export function nivelConfianzaInfo(confianza) {
 
 /** One word for a 0-100 criterion score. */
 export function palabraValor(valor) {
-  if (valor >= 75) return "Muy bueno";
-  if (valor >= 55) return "Bueno";
-  if (valor >= 40) return "Regular";
-  return "Bajo";
+  if (valor >= 75) return "Very good";
+  if (valor >= 55) return "Good";
+  if (valor >= 40) return "Fair";
+  return "Low";
 }
 
 const promedio = (xs) => xs.reduce((x, y) => x + y, 0) / xs.length;
@@ -71,23 +71,23 @@ export function resumenSimple(result, pesos = {}, posicion = 0, mejorTotal = res
   const frases = [];
   const dif = mejorTotal - result.total;
   if (posicion === 0) {
-    frases.push("Es la rotación que mejor encaja con lo que usted marcó como importante.");
+    frases.push("This rotation best matches the priorities you selected.");
   } else if (dif <= 0) {
-    frases.push("Encaja igual de bien con sus prioridades que la primera opción.");
+    frases.push("It matches your priorities as well as the first option.");
   } else {
-    frases.push(`Queda ${dif} ${dif === 1 ? "punto" : "puntos"} por debajo de la mejor opción para sus prioridades.`);
+    frases.push(`It scores ${dif} ${dif === 1 ? "point" : "points"} below the best option for your priorities.`);
   }
   if (otros.length) {
     const ventajas = Object.entries(result.criterios)
       .map(([id, valor]) => [id, valor - promedio(otros.map((o) => o[id] ?? 0))])
       .sort((a, b) => b[1] - a[1]);
     const [mejor, peor] = [ventajas[0], ventajas.at(-1)];
-    if (mejor[1] >= 5) frases.push(`Frente a las otras dos, destaca porque ${CRITERIO_INFO[mejor[0]].fuerte}.`);
-    if (peor[1] <= -5) frases.push(`Su punto débil frente a las otras: ${CRITERIO_INFO[peor[0]].debil}.`);
+    if (mejor[1] >= 5) frases.push(`Compared with the other two, it stands out because ${CRITERIO_INFO[mejor[0]].fuerte}.`);
+    if (peor[1] <= -5) frases.push(`Its weakness compared with the others: ${CRITERIO_INFO[peor[0]].debil}.`);
   }
   const descuidado = Object.entries(result.criterios).find(([id, valor]) => (pesos[id] ?? 0) >= 4 && valor < 45);
   if (descuidado) {
-    frases.push(`Ojo: usted marcó "${CRITERIO_INFO[descuidado[0]].label.toLowerCase()}" como muy importante y aquí sale bajo.`);
+    frases.push(`Please note: you marked "${CRITERIO_INFO[descuidado[0]].label.toLowerCase()}" as very important, but it scores low here.`);
   }
   return frases;
 }
@@ -95,13 +95,13 @@ export function resumenSimple(result, pesos = {}, posicion = 0, mejorTotal = res
 /** Short tags describing what a crop brings to the rotation. */
 export function rasgosCultivo(cultivo) {
   const rasgos = [];
-  if (cultivo.fija_n_kg_ha > 0) rasgos.push("Abona la tierra");
-  if (cultivo.forraje >= 1) rasgos.push("Sirve de pasto");
-  else if (cultivo.forraje > 0) rasgos.push("Sus restos sirven de pasto");
-  if (cultivo.tolerancia_sequia === "alta") rasgos.push("Aguanta la sequía");
-  if (cultivo.temp_dano_helada <= -4) rasgos.push("Aguanta las heladas");
-  else if (cultivo.temp_dano_helada >= -1) rasgos.push("Sensible a las heladas");
-  if (cultivo.ingresos === "alto") rasgos.push("Buen ingreso");
+  if (cultivo.fija_n_kg_ha > 0) rasgos.push("Enriches the soil");
+  if (cultivo.forraje >= 1) rasgos.push("Provides livestock feed");
+  else if (cultivo.forraje > 0) rasgos.push("Residues provide livestock feed");
+  if (cultivo.tolerancia_sequia === "alta") rasgos.push("Drought tolerant");
+  if (cultivo.temp_dano_helada <= -4) rasgos.push("Frost tolerant");
+  else if (cultivo.temp_dano_helada >= -1) rasgos.push("Frost sensitive");
+  if (cultivo.ingresos === "alto") rasgos.push("Higher income potential");
   return rasgos;
 }
 
@@ -109,7 +109,7 @@ function aniosRotacion(rotacion, cultivosPorId) {
   return rotacion.anios.map((a, i) => {
     const cultivo = cultivosPorId[a.cultivo];
     if (!cultivo) {
-      return { anio: i + 1, id: "descanso", nombre: "Descanso", descanso: true, detalle: "La tierra descansa", rasgos: [] };
+      return { anio: i + 1, id: "descanso", nombre: "Fallow", descanso: true, detalle: "The land rests", rasgos: [] };
     }
     const siembra = a.mes_siembra ?? cultivo.meses_siembra[0];
     return {
@@ -117,7 +117,7 @@ function aniosRotacion(rotacion, cultivosPorId) {
       id: cultivo.id,
       nombre: cultivo.nombre,
       descanso: false,
-      detalle: `Siembra en ${MESES[siembra - 1]} · ${cultivo.duracion_meses} meses`,
+      detalle: `Sow in ${MESES[siembra - 1]} · ${cultivo.duracion_meses} months`,
       rasgos: rasgosCultivo(cultivo),
     };
   });
@@ -128,8 +128,8 @@ function detalleTecnico(result, contexto) {
   const items = [];
   if (contexto.pendiente) {
     items.push(
-      `Pendiente: ${Math.round(contexto.pendiente.pendiente_pct)} % (${contexto.pendiente.fuente}; ` +
-      "puede subestimar en laderas muy empinadas o andenes).",
+      `Slope: ${Math.round(contexto.pendiente.pendiente_pct)} % (${contexto.pendiente.fuente}; ` +
+      "may underestimate slope on very steep hillsides or terraces).",
     );
   }
   const vistos = new Set();
@@ -139,28 +139,28 @@ function detalleTecnico(result, contexto) {
       if (vistos.has(clave)) continue;
       vistos.add(clave);
       items.push(
-        `${c.nombre}, ${MESES[mes - 1]}: ${Math.round(prob * 100)} % de los años con mínima bajo 2 °C; ` +
-        `daño desde ${c.temp_dano_helada} °C.`,
+        `${c.nombre}, ${MESES[mes - 1]}: ${Math.round(prob * 100)} % of years with a minimum below 2 °C; ` +
+        `damage threshold: ${c.temp_dano_helada} °C.`,
       );
     }
   }
-  items.push(`Puntajes por criterio (0-100): ${Object.entries(result.criterios)
+  items.push(`Scores by criterion (0–100): ${Object.entries(result.criterios)
     .map(([id, v]) => `${CRITERIO_INFO[id]?.corto ?? id} ${v}`).join(", ")}.`);
-  items.push(`Fuente del clima: ${contexto.fuente ?? "NASA POWER"}.`);
+  items.push(`Climate source: ${contexto.fuente ?? "NASA POWER"}.`);
   return items;
 }
 
 function datosUsados(result, contexto) {
   return [
-    `Fuente climática: ${contexto.fuente ?? "NASA POWER"}. Período consultado: 1991–2024.`,
+    `Climate data source: ${contexto.fuente ?? "NASA POWER"}. Period queried: 1991–2024.`,
     contexto.corregido
-      ? `Corrección con SENAMHI PISCO: período de referencia ${contexto.periodoCorreccion ?? "no informado"}. Es una grilla climática, no una medición directa de esta parcela.`
-      : "Sin corrección local: NASA POWER puede subestimar el riesgo de heladas en la sierra.",
-    `El ${result.total} % indica cuánto encaja la rotación con sus prioridades; no es una probabilidad de cosecha.`,
+      ? `SENAMHI PISCO correction: reference period ${contexto.periodoCorreccion ?? "not reported"}. This is a climate grid, not a direct measurement of this plot.`
+      : "Without local correction, NASA POWER may underestimate frost risk in the highlands.",
+    `The ${result.total} % indicates how well this rotation matches your priorities; it is not a probability of harvest success.`,
     contexto.pendiente
-      ? `Pendiente del terreno en su punto: ${Math.round(contexto.pendiente.pendiente_pct)} % (${contexto.pendiente.fuente}). El resultado todavía no incorpora MODIS NDVI ni SMAP.`
-      : "No pudimos calcular la pendiente de su punto; se usa una pendiente estimada de 18 %. El resultado todavía no incorpora MODIS NDVI ni SMAP.",
-    "El clima histórico orienta la comparación; no es un pronóstico de la próxima campaña.",
+      ? `Terrain slope at your point: ${Math.round(contexto.pendiente.pendiente_pct)} % (${contexto.pendiente.fuente}). The result does not yet incorporate MODIS NDVI or SMAP.`
+      : "We could not calculate slope at your point; an estimated slope of 18 % is used. The result does not yet incorporate MODIS NDVI or SMAP.",
+    "Historical climate informs the comparison; it is not a forecast for the next growing season.",
   ];
 }
 

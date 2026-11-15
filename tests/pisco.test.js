@@ -150,6 +150,6 @@ test("fallbackAssessment keeps confidence within 25 km and warns beyond", () => 
   assert.deepEqual(fallbackAssessment(25, "Cusco"), { corregido: true, aviso: null });
   const far = fallbackAssessment(60, "Cusco");
   assert.equal(far.corregido, false);
-  assert.match(far.aviso, /usamos la de Cusco, a 60 km/);
+  assert.match(far.aviso, /using the one from Cusco, 60 km away/);
   assert.equal(SELECT_RADIUS_KM, 100);
 });

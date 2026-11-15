@@ -7,63 +7,63 @@
   "imagenes": {
     "papa": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Field_of_flowering_potatoes_at_Usan_-_geograph.org.uk_-_6377844.jpg/500px-Field_of_flowering_potatoes_at_Usan_-_geograph.org.uk_-_6377844.jpg",
-      "alt": "Campo de papa en flor",
+      "alt": "Flowering potato field",
       "autor": "Adrian Diack",
       "licencia": "CC BY-SA 2.0",
       "pagina": "https://commons.wikimedia.org/wiki/File:Field_of_flowering_potatoes_at_Usan_-_geograph.org.uk_-_6377844.jpg"
     },
     "maiz": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Maize_field_in_Bavaria_in_Summer_2013.JPG/500px-Maize_field_in_Bavaria_in_Summer_2013.JPG",
-      "alt": "Campo de maíz",
+      "alt": "Maize field",
       "autor": "High Contrast",
       "licencia": "CC BY 3.0 DE",
       "pagina": "https://commons.wikimedia.org/wiki/File:Maize_field_in_Bavaria_in_Summer_2013.JPG"
     },
     "trigo": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Ears_of_wheat_-_geograph.org.uk_-_8370635.jpg/500px-Ears_of_wheat_-_geograph.org.uk_-_8370635.jpg",
-      "alt": "Espigas de trigo",
+      "alt": "Wheat ears",
       "autor": "Philip Halling",
       "licencia": "CC BY-SA 2.0",
       "pagina": "https://commons.wikimedia.org/wiki/File:Ears_of_wheat_-_geograph.org.uk_-_8370635.jpg"
     },
     "haba": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/1/15/Field_beans_%28Vicia_faba%29_-_flowers_-_geograph.org.uk_-_5521094.jpg",
-      "alt": "Plantas de haba en flor",
+      "alt": "Flowering faba bean plants",
       "autor": "Evelyn Simak",
       "licencia": "CC BY-SA 2.0",
       "pagina": "https://commons.wikimedia.org/wiki/File:Field_beans_(Vicia_faba)_-_flowers_-_geograph.org.uk_-_5521094.jpg"
     },
     "cebada": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Escourgeon-Hordeum_vulgare_subsp._vulgare.jpg/500px-Escourgeon-Hordeum_vulgare_subsp._vulgare.jpg",
-      "alt": "Espigas de cebada",
+      "alt": "Barley ears",
       "autor": "raul.dupagne",
-      "licencia": "Dominio público",
+      "licencia": "Public domain",
       "pagina": "https://commons.wikimedia.org/wiki/File:Escourgeon-Hordeum_vulgare_subsp._vulgare.jpg"
     },
     "avena": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Green_oat_field.jpg/500px-Green_oat_field.jpg",
-      "alt": "Campo de avena verde",
+      "alt": "Green oat field",
       "autor": "W.carter",
       "licencia": "CC0",
       "pagina": "https://commons.wikimedia.org/wiki/File:Green_oat_field.jpg"
     },
     "tarwi": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Peruvian_Field_Lupines.jpg/500px-Peruvian_Field_Lupines.jpg",
-      "alt": "Campo de tarwi en flor en el Perú",
+      "alt": "Flowering Andean lupin field in Peru",
       "autor": "D. Gordon E. Robertson",
       "licencia": "CC BY-SA 3.0",
       "pagina": "https://commons.wikimedia.org/wiki/File:Peruvian_Field_Lupines.jpg"
     },
     "vicia": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Vicia_sativa_LC0223.jpg/500px-Vicia_sativa_LC0223.jpg",
-      "alt": "Vicia en flor",
+      "alt": "Flowering common vetch",
       "autor": "Jörg Hempel",
       "licencia": "CC BY-SA 3.0 DE",
       "pagina": "https://commons.wikimedia.org/wiki/File:Vicia_sativa_LC0223.jpg"
     },
     "descanso": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Fallow_field_-_Breach_Farm_-_geograph.org.uk_-_6824278.jpg/500px-Fallow_field_-_Breach_Farm_-_geograph.org.uk_-_6824278.jpg",
-      "alt": "Campo en descanso",
+      "alt": "Fallow field",
       "autor": "Mr Ignavy",
       "licencia": "CC BY-SA 2.0",
       "pagina": "https://commons.wikimedia.org/wiki/File:Fallow_field_-_Breach_Farm_-_geograph.org.uk_-_6824278.jpg"

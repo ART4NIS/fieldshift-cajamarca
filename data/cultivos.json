@@ -13,7 +13,7 @@
       "forraje": "Forage value: 1 = yes, 0.5 = partial (residues/stover), 0 = no.",
       "ingresos": "Relative income: alto | medio | bajo."
     },
-    "fuente": "Estimación del equipo (pendiente de validar)",
+    "fuente": "Team estimate (pending validation)",
     "estado": "All values are team estimates based on general agronomic knowledge. They have not been checked against FAO, INIA or other primary sources yet and must be validated by a local agronomist (e.g. INIA / Agencia Agraria Cajamarca).",
     "origen": [
       "Team briefing table: agua_mm_ciclo, fija_n_kg_ha, forraje, tolerancia_sequia, ingresos",
@@ -22,7 +22,7 @@
   },
   "cultivos": [
     {
-      "id": "papa", "nombre": "Papa",
+      "id": "papa", "nombre": "Potato",
       "meses_siembra": [10, 11], "duracion_meses": 5,
       "temp_opt_min": 10, "temp_opt_max": 20, "temp_dano_helada": -1,
       "agua_mm_ciclo": 500, "tolerancia_sequia": "baja", "cobertura_suelo": 0.6,
@@ -30,7 +30,7 @@
       "estimado": true
     },
     {
-      "id": "maiz", "nombre": "Maíz",
+      "id": "maiz", "nombre": "Maize",
       "meses_siembra": [10, 11], "duracion_meses": 7,
       "temp_opt_min": 14, "temp_opt_max": 24, "temp_dano_helada": -1,
       "agua_mm_ciclo": 450, "tolerancia_sequia": "media", "cobertura_suelo": 0.5,
@@ -38,7 +38,7 @@
       "estimado": true
     },
     {
-      "id": "trigo", "nombre": "Trigo",
+      "id": "trigo", "nombre": "Wheat",
       "meses_siembra": [1, 2], "duracion_meses": 5,
       "temp_opt_min": 10, "temp_opt_max": 22, "temp_dano_helada": -3,
       "agua_mm_ciclo": 350, "tolerancia_sequia": "media", "cobertura_suelo": 0.7,
@@ -46,7 +46,7 @@
       "estimado": true
     },
     {
-      "id": "haba", "nombre": "Haba",
+      "id": "haba", "nombre": "Faba bean",
       "meses_siembra": [10, 11], "duracion_meses": 6,
       "temp_opt_min": 7, "temp_opt_max": 20, "temp_dano_helada": -3,
       "agua_mm_ciclo": 300, "tolerancia_sequia": "media", "cobertura_suelo": 0.6,
@@ -54,7 +54,7 @@
       "estimado": true
     },
     {
-      "id": "tarwi", "nombre": "Tarwi",
+      "id": "tarwi", "nombre": "Andean lupin (tarwi)",
       "meses_siembra": [10, 11], "duracion_meses": 7,
       "temp_opt_min": 8, "temp_opt_max": 20, "temp_dano_helada": -2,
       "agua_mm_ciclo": 280, "tolerancia_sequia": "alta", "cobertura_suelo": 0.5,
@@ -62,7 +62,7 @@
       "estimado": true
     },
     {
-      "id": "cebada", "nombre": "Cebada",
+      "id": "cebada", "nombre": "Barley",
       "meses_siembra": [1, 12], "duracion_meses": 5,
       "temp_opt_min": 8, "temp_opt_max": 20, "temp_dano_helada": -4,
       "agua_mm_ciclo": 300, "tolerancia_sequia": "media", "cobertura_suelo": 0.7,
@@ -70,7 +70,7 @@
       "estimado": true
     },
     {
-      "id": "avena", "nombre": "Avena forrajera",
+      "id": "avena", "nombre": "Forage oats",
       "meses_siembra": [12, 1], "duracion_meses": 5,
       "temp_opt_min": 8, "temp_opt_max": 20, "temp_dano_helada": -5,
       "agua_mm_ciclo": 320, "tolerancia_sequia": "media", "cobertura_suelo": 0.8,
@@ -78,7 +78,7 @@
       "estimado": true
     },
     {
-      "id": "vicia", "nombre": "Vicia sativa",
+      "id": "vicia", "nombre": "Common vetch (Vicia sativa)",
       "meses_siembra": [12, 1], "duracion_meses": 5,
       "temp_opt_min": 7, "temp_opt_max": 20, "temp_dano_helada": -5,
       "agua_mm_ciclo": 250, "tolerancia_sequia": "alta", "cobertura_suelo": 0.8,

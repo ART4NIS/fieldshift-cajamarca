@@ -7,35 +7,59 @@
   "rotaciones": [
     {
       "id": "A",
-      "nombre": "Tradicional",
-      "resumen": "Rotación típica de Cajamarca. Alta demanda de agua y nutrientes, sin fijación de nitrógeno.",
+      "nombre": "Traditional",
+      "resumen": "A reference rotation for Cajamarca. High water and nutrient demand, without nitrogen fixation.",
       "anios": [
-        { "cultivo": "papa" },
-        { "cultivo": "maiz" },
-        { "cultivo": "trigo" },
-        { "cultivo": "descanso" }
+        {
+          "cultivo": "papa"
+        },
+        {
+          "cultivo": "maiz"
+        },
+        {
+          "cultivo": "trigo"
+        },
+        {
+          "cultivo": "descanso"
+        }
       ]
     },
     {
       "id": "B",
-      "nombre": "Nitrógeno+",
-      "resumen": "Incluye haba, que fija nitrógeno, y termina con avena forrajera para el ganado lechero.",
+      "nombre": "Nitrogen+",
+      "resumen": "Includes nitrogen-fixing faba bean and ends with forage oats for dairy livestock.",
       "anios": [
-        { "cultivo": "papa" },
-        { "cultivo": "haba" },
-        { "cultivo": "cebada" },
-        { "cultivo": "avena" }
+        {
+          "cultivo": "papa"
+        },
+        {
+          "cultivo": "haba"
+        },
+        {
+          "cultivo": "cebada"
+        },
+        {
+          "cultivo": "avena"
+        }
       ]
     },
     {
       "id": "C",
-      "nombre": "Agua eficiente",
-      "resumen": "Tarwi y vicia toleran la sequía y fijan nitrógeno; la vicia cubre el suelo y reduce la erosión.",
+      "nombre": "Water efficient",
+      "resumen": "Andean lupin and vetch fix nitrogen and have estimated drought tolerance; vetch covers the soil and helps reduce erosion.",
       "anios": [
-        { "cultivo": "papa" },
-        { "cultivo": "tarwi" },
-        { "cultivo": "trigo" },
-        { "cultivo": "vicia" }
+        {
+          "cultivo": "papa"
+        },
+        {
+          "cultivo": "tarwi"
+        },
+        {
+          "cultivo": "trigo"
+        },
+        {
+          "cultivo": "vicia"
+        }
       ]
     }
   ]
