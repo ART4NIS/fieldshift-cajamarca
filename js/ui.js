@@ -194,6 +194,9 @@ async function initMap() {
   const satellite = L.tileLayer(
     "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     {
+      // Esri imagery in rural Peru stops at zoom 17; deeper tiles are a
+      // "Map data not yet available" placeholder, so upscale level 17 instead.
+      maxNativeZoom: 17,
       maxZoom: 19,
       attribution: "Imágenes &copy; Esri, Maxar, Earthstar Geographics y la comunidad de usuarios de GIS",
     },
