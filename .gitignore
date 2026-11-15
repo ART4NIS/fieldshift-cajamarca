@@ -12,3 +12,4 @@ raw/
 # Local tooling caches
 .atl/
 node_modules/
+.cache/

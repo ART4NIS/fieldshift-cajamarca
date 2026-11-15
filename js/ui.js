@@ -5,6 +5,8 @@ import {
   nearestPilot,
   circleRing,
   isOnWater,
+  inSelectableArea,
+  fetchSlope,
   fallbackAssessment,
   PILOT_SNAP_KM,
   SELECT_RADIUS_KM,
@@ -46,6 +48,8 @@ const state = {
   aviso: null,
   loading: null,
   water: null,
+  area: null, // data/selectable_area.geojson; null -> fall back to 100 km circles
+  pendiente: null, // { pendiente_pct, fuente } or null
   clima: null,
   corregido: false,
   fuente: "No informada",
@@ -112,9 +116,15 @@ function selectPoint(lat, lon, pilotId = null) {
     $("map-msg").textContent = "Ese punto está sobre un lago. Toque un punto en tierra firme.";
     return;
   }
-  // Selectable area: 100 km around each pilot. Within 10 km the pilot's own correction is used;
+  // Selectable area: sierra land (>= 2,500 m) near a pilot. Within 10 km the pilot's own correction is used;
   // farther out the correction is computed live for the exact point (see ensureClimate).
-  const near = nearestPilot(lat, lon, state.pilots, SELECT_RADIUS_KM);
+  // Without the area file, fall back to plain 100 km circles. Pilot chips (pilotId) always work.
+  if (!pilotId && state.area && !inSelectableArea(lat, lon, state.area)) {
+    $("map-msg").textContent =
+      "Este punto está fuera del área con datos (sierra sobre 2 500 m cerca de las zonas piloto). Elija un punto dentro del área verde.";
+    return;
+  }
+  const near = nearestPilot(lat, lon, state.pilots, state.area ? Infinity : SELECT_RADIUS_KM);
   if (!near && !pilotId) {
     $("map-msg").textContent = "Todavía no tenemos datos para esta zona. Elija un punto dentro del área verde.";
     return;
@@ -124,6 +134,7 @@ function selectPoint(lat, lon, pilotId = null) {
   $("map-msg").textContent = "";
   state.parcela = { lat, lon, pilotId: chosen.id, km, mode: km <= PILOT_SNAP_KM ? "pilot" : "live" };
   state.clima = null;
+  state.pendiente = null;
   state.aviso = null;
   if (marker) marker.setLatLng([lat, lon]);
   else marker = L.marker([lat, lon]).addTo(map);
@@ -144,6 +155,12 @@ async function initMap() {
     state.water = null; // without the mask, lake clicks are simply not rejected
   }
 
+  try {
+    state.area = await loadJson("data/selectable_area.geojson");
+  } catch {
+    state.area = null; // drawPilotZones/selectPoint fall back to 100 km circles
+  }
+
   const pilots = (await loadPilots()).filter((p) => p.disponible !== false);
   state.pilots = pilots;
   drawPilotZones(pilots);
@@ -159,9 +176,19 @@ async function initMap() {
   }
 }
 
-/** Green circles (100 km) where a local correction is available; gray mask (with holes) elsewhere. */
+/**
+ * Green shapes where data is available (real selectable area, or 100 km circles if the area file is
+ * missing); gray mask (with holes) elsewhere.
+ */
 function drawPilotZones(pilots) {
-  const rings = pilots.map((p) => circleRing(p.lat, p.lon, SELECT_RADIUS_KM));
+  const toLatLng = ([lon, lat]) => [lat, lon];
+  // Each zone = list of polygons, each polygon = [outer ring, ...holes], in [lat, lon].
+  const zones = state.area
+    ? state.area.features.map((f) =>
+        (f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates)
+          .map((poly) => poly.map((ring) => ring.map(toLatLng))))
+    : pilots.map((p) => [[circleRing(p.lat, p.lon, SELECT_RADIUS_KM)]]);
+  const rings = zones.flat(2); // every ring, outer and inner: even-odd fill makes them holes in the mask
   const world = [[-89, -179], [-89, 179], [89, 179], [89, -179]];
   L.polygon([world, ...rings], {
     stroke: false,
@@ -169,8 +196,8 @@ function drawPilotZones(pilots) {
     fillOpacity: 0.45,
     interactive: false,
   }).addTo(map);
-  for (const ring of rings) {
-    L.polygon(ring, {
+  for (const zone of zones) {
+    L.polygon(zone, {
       color: "#2f6b3f",
       weight: 2,
       fillColor: "#3f9a55",
@@ -178,7 +205,7 @@ function drawPilotZones(pilots) {
       interactive: false,
     }).addTo(map);
   }
-  // At country zoom a 100 km circle is a few pixels wide: show a fixed-size dot that zooms into the zone.
+  // At country zoom a zone is a few pixels wide: show a fixed-size dot that zooms into the zone.
   const dots = pilots.map((p) =>
     L.circleMarker([p.lat, p.lon], {
       radius: 9,
@@ -230,6 +257,9 @@ async function loadClimate() {
   const pilotName = state.pilots.find((x) => x.id === p.pilotId)?.nombre ?? p.pilotId;
   let options = { pilotId: p.pilotId };
   state.aviso = null;
+  state.pendiente = null;
+  // Slope runs in parallel with the climate request (fetchSlope never rejects: null on failure).
+  const slopePromise = fetchSlope(p.lat, p.lon);
   if (p.mode === "live") {
     $("status").textContent = "Calculando la corrección local para su punto (puede tardar hasta un minuto la primera vez)...";
     try {
@@ -251,6 +281,7 @@ async function loadClimate() {
     state.corregido = res.corregido;
     state.fuente = res.fuente;
     state.periodoCorreccion = res.periodoCorreccion;
+    state.pendiente = await slopePromise;
     const alt = checkAltitude(res.elevation);
     const status = alt.ok ? "" : `${alt.mensaje} (Fuente: ${res.elevationSource})`;
     $("status").textContent = [state.aviso, status].filter(Boolean).join(" ");
@@ -262,7 +293,7 @@ async function loadClimate() {
 }
 
 function currentResults() {
-  const contexto = { corregido: state.corregido, pendiente_pct: null };
+  const contexto = { corregido: state.corregido, pendiente_pct: state.pendiente?.pendiente_pct ?? null };
   return evaluarRotaciones(state.clima, state.cultivos, state.rotaciones, state.pesos, contexto);
 }
 
@@ -283,6 +314,10 @@ function renderResults() {
   // The banner is for climate with no local correction at all. A distant pilot correction (fallback)
   // is still a correction: its own warning with the distance goes in the "before sowing" box instead.
   $("frost-banner").hidden = state.corregido || state.parcela?.mode === "fallback";
+  const slopeNote = $("slope-note");
+  const slopeText = state.pendiente ? slopeSentence(state.pendiente.pendiente_pct) : "";
+  slopeNote.textContent = slopeText;
+  slopeNote.hidden = !slopeText;
   $("estimated-note").hidden = !shared.includes(AVISO_DATOS_ESTIMADOS);
   const notes = [
     ...(state.aviso ? [state.aviso] : []),
@@ -298,6 +333,17 @@ function renderResults() {
   );
   renderRiskCalendar($("chart-risk"), calendarioRiesgos(state.clima));
   renderRadar($("chart-radar"), results);
+}
+
+/** Plain-language class: < 8 % gentle, 8-20 % moderate, > 20 % steep. */
+function slopeClass(pct) {
+  if (pct < 8) return "suave";
+  if (pct <= 20) return "moderada";
+  return "fuerte";
+}
+
+function slopeSentence(pct) {
+  return `Pendiente estimada del terreno en su punto: ${Math.round(pct)} % (${slopeClass(pct)}).`;
 }
 
 function resultCard(r) {
@@ -333,6 +379,12 @@ function resultCard(r) {
 function techDetail(cultivos) {
   const seen = new Set();
   const items = [];
+  if (state.pendiente) {
+    items.push(
+      `Pendiente: ${Math.round(state.pendiente.pendiente_pct)} % (Copernicus DEM 90 m vía Open-Meteo; ` +
+      "puede subestimar en laderas muy empinadas o andenes).",
+    );
+  }
   for (const c of cultivos) {
     for (const { mes, prob } of c.heladas ?? []) {
       const key = `${c.id}-${mes}`;
