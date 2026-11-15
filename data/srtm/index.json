@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "fuente": "SRTM SRTMGL1_NC.003 (30 m, Feb 2000) via NASA AppEEARS",
+    "formato": "Int16 little-endian, row-major from the north-west corner; nodata = -32768"
+  },
+  "areas": {
+    "cajamarca": {
+      "west": -78.5351389,
+      "east": -78.4848611,
+      "south": -7.1851389,
+      "north": -7.1348611,
+      "width": 181,
+      "height": 181,
+      "res_deg": 0.0002777778,
+      "nodata": -32768,
+      "file": "data/srtm/cajamarca.bin"
+    },
+    "huancayo": {
+      "west": -75.2351389,
+      "east": -75.1848611,
+      "south": -12.0951389,
+      "north": -12.0448611,
+      "width": 181,
+      "height": 181,
+      "res_deg": 0.0002777778,
+      "nodata": -32768,
+      "file": "data/srtm/huancayo.bin"
+    },
+    "puno": {
+      "west": -70.0451389,
+      "east": -69.9948611,
+      "south": -15.8651389,
+      "north": -15.8148611,
+      "width": 181,
+      "height": 181,
+      "res_deg": 0.0002777778,
+      "nodata": -32768,
+      "file": "data/srtm/puno.bin"
+    },
+    "cusco": {
+      "west": -71.9951389,
+      "east": -71.9448611,
+      "south": -13.5451389,
+      "north": -13.4948611,
+      "width": 181,
+      "height": 181,
+      "res_deg": 0.0002777778,
+      "nodata": -32768,
+      "file": "data/srtm/cusco.bin"
+    }
+  }
+}

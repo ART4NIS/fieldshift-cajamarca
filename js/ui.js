@@ -7,6 +7,10 @@ import {
   isOnWater,
   inSelectableArea,
   fetchSlope,
+  fetchSrtmSlope,
+  zoneSlope,
+  zoneSteepNote,
+  SRTM_FUENTE,
   fallbackAssessment,
   searchPlaces,
   SEARCH_MIN_INTERVAL_MS,
@@ -57,6 +61,9 @@ const state = {
   fuente: "No informada",
   periodoCorreccion: null,
   fichas: null,
+  srtm: null, // data/srtm/index.json: NASA SRTM 30 m grids around the pilots
+  srtmGrids: new Map(),
+  terrain: null, // SRTM statistics of the chosen pilot zone (data/pilots/<id>.json "terrain")
   images: null, // data/imagenes_cultivos.json -> { cropId: { url, alt, autor, licencia, pagina } }
   selected: null, // id of the rotation shown in the detail column
   glosario: [],
@@ -387,8 +394,9 @@ async function loadClimate() {
   let options = { pilotId: p.pilotId };
   state.aviso = null;
   state.pendiente = null;
-  // Slope runs in parallel with the climate request (fetchSlope never rejects: null on failure).
-  const slopePromise = fetchSlope(p.lat, p.lon);
+  state.terrain = null;
+  // Slope runs in parallel with the climate request (pointSlope never rejects: null on failure).
+  const slopePromise = pointSlope(p);
   if (p.mode === "live") {
     setStatus("Calculando la corrección local para su punto (puede tardar hasta un minuto la primera vez)...");
     try {
@@ -421,8 +429,46 @@ async function loadClimate() {
   }
 }
 
+/** Pilot JSON "terrain" block (SRTM statistics of the pilot zone), or null. */
+async function loadTerrain(pilotId) {
+  try {
+    return (await loadJson(`data/pilots/${pilotId}.json`)).terrain ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Slope for the chosen point, best source first:
+ *   1. NASA SRTM 30 m at the point, when it falls inside a pilot's SRTM area;
+ *   2. Copernicus DEM 90 m at the point (Open-Meteo);
+ *   3. the median slope of the pilot zone (SRTM), only for points next to a pilot.
+ * Null when none is available (the engine then uses its default).
+ */
+async function pointSlope(p) {
+  const fetchVersioned = (path) => fetch(ASSET_VERSION ? `${path}?v=${ASSET_VERSION}` : path);
+  const [srtm, terrain] = await Promise.all([
+    fetchSrtmSlope(p.lat, p.lon, { index: state.srtm, fetchImpl: fetchVersioned, cache: state.srtmGrids }),
+    p.mode === "pilot" ? loadTerrain(p.pilotId) : null,
+  ]);
+  state.terrain = terrain;
+  if (srtm) return srtm;
+  return (await fetchSlope(p.lat, p.lon)) ?? zoneSlope(terrain);
+}
+
+/** Pilot-zone note from SRTM ("how much of the zone is steep"), only for points next to a pilot. */
+function zoneNote() {
+  if (!state.terrain || state.parcela?.mode !== "pilot") return null;
+  const name = state.pilots.find((x) => x.id === state.parcela.pilotId)?.nombre ?? state.parcela.pilotId;
+  return zoneSteepNote(state.terrain, name);
+}
+
 function currentResults() {
-  const contexto = { corregido: state.corregido, pendiente_pct: state.pendiente?.pendiente_pct ?? null };
+  const contexto = {
+    corregido: state.corregido,
+    pendiente_pct: state.pendiente?.pendiente_pct ?? null,
+    satelital: { terreno: state.pendiente?.fuente?.startsWith(SRTM_FUENTE) ?? false },
+  };
   return evaluarRotaciones(state.clima, state.cultivos, state.rotaciones, state.pesos, contexto);
 }
 
@@ -460,7 +506,8 @@ function buildFichas() {
 /** Notes that apply to every card: shown once in "Antes de sembrar" and once in the PDF. */
 function commonNotes(shared) {
   return [
-    ...(state.pendiente ? [slopeSentence(state.pendiente.pendiente_pct)] : []),
+    ...(state.pendiente ? [slopeSentence(state.pendiente)] : []),
+    ...(zoneNote() ? [zoneNote()] : []),
     ...(shared.includes(AVISO_DATOS_ESTIMADOS)
       ? ["Los datos de los cultivos son estimaciones de estudios publicados, todavía sin validar en campo."]
       : []),
@@ -494,7 +541,7 @@ function renderResults() {
   // is still a correction: its own warning with the distance goes in the "before sowing" box instead.
   $("frost-banner").hidden = state.corregido || state.parcela?.mode === "fallback";
   const slopeNote = $("slope-note");
-  const slopeText = state.pendiente ? slopeSentence(state.pendiente.pendiente_pct) : "";
+  const slopeText = [state.pendiente ? slopeSentence(state.pendiente) : "", zoneNote() ?? ""].filter(Boolean).join(" ");
   slopeNote.textContent = slopeText;
   slopeNote.hidden = !slopeText;
   $("estimated-note").hidden = !shared.includes(AVISO_DATOS_ESTIMADOS);
@@ -563,8 +610,17 @@ function slopeClass(pct) {
   return "fuerte";
 }
 
-function slopeSentence(pct) {
-  return `Pendiente estimada del terreno en su punto: ${Math.round(pct)} % (${slopeClass(pct)}).`;
+/** Plain sentence for the slope, saying where it was measured. */
+function slopeSentence(pendiente) {
+  const pct = Math.round(pendiente.pendiente_pct);
+  if (pendiente.zona) {
+    return `No pudimos medir la pendiente justo en su punto; en la zona del piloto la pendiente típica es ${pct} % ` +
+      `(${slopeClass(pct)}).`;
+  }
+  const origen = pendiente.fuente?.startsWith(SRTM_FUENTE)
+    ? "medida con el satélite SRTM de la NASA (30 m)"
+    : "estimada con el modelo de terreno Copernicus (90 m)";
+  return `Pendiente del terreno en su punto: ${pct} % (${slopeClass(pct)}), ${origen}.`;
 }
 
 // ---- priorities --------------------------------------------------------
@@ -794,6 +850,11 @@ async function main() {
     state.fichas = await loadJson("data/fichas.json");
   } catch {
     // Results remain usable; each card explains that evidence could not load.
+  }
+  try {
+    state.srtm = await loadJson("data/srtm/index.json");
+  } catch {
+    // Without SRTM grids the slope comes from Open-Meteo, as before.
   }
   try {
     state.images = (await loadJson("data/imagenes_cultivos.json")).imagenes;

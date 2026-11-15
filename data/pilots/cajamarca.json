@@ -236,5 +236,22 @@
         "lluvia_factor": 1.132
       }
     ]
-  }
+  },
+  "terrain": {
+    "fuente": "SRTM SRTMGL1_NC.003 (30 m, Feb 2000) via NASA AppEEARS",
+    "area_km": 5.5,
+    "elevacion_m": {
+      "media": 2772,
+      "min": 2658,
+      "max": 3298
+    },
+    "pendiente_pct": {
+      "media": 13.1,
+      "mediana": 6.7,
+      "p90": 35.0,
+      "max": 127.0
+    },
+    "pct_area_pendiente_mayor_25": 19.7
+  },
+  "satelital_actualizado": "2026-11-15"
 }
