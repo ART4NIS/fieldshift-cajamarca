@@ -5,6 +5,7 @@ only sent to the AppEEARS login endpoint; nothing is stored on disk.
 
 Usage:
     python scripts/submit_appeears.py                     # submit the NDVI grid task
+    python scripts/submit_appeears.py --only-missing      # NDVI grid for pilots without ndvi yet
     python scripts/submit_appeears.py --task srtm         # submit another task
     python scripts/submit_appeears.py --dry-run           # print the payload only
     python scripts/submit_appeears.py --status   # list your recent tasks
@@ -67,8 +68,15 @@ def point_task() -> dict:
     }
 
 
-def grid_points() -> list[dict]:
+def has_ndvi(pilot_id: str) -> bool:
+    path = ROOT / "data" / "pilots" / f"{pilot_id}.json"
+    return path.exists() and "ndvi" in json.loads(path.read_text(encoding="utf-8"))
+
+
+def grid_points(only_missing: bool = False) -> list[dict]:
     pilots = json.loads(PILOTS_INDEX.read_text(encoding="utf-8"))["pilotos"]
+    if only_missing:
+        pilots = [p for p in pilots if not has_ndvi(p["id"])]
     points = []
     for pilot in pilots:
         for row, dlat in enumerate(GRID_OFFSETS):
@@ -84,14 +92,14 @@ def grid_points() -> list[dict]:
     return points
 
 
-def grid_task() -> dict:
+def grid_task(only_missing: bool = False) -> dict:
     return {
         "task_type": "point",
-        "task_name": "fieldshift-ndvi-grid",
+        "task_name": "fieldshift-ndvi-grid-missing" if only_missing else "fieldshift-ndvi-grid",
         "params": {
             "dates": [{"startDate": "01-01-2015", "endDate": "12-31-2024"}],
             "layers": [{"product": p, "layer": l} for p, l in GRID_LAYERS],
-            "coordinates": grid_points(),
+            "coordinates": grid_points(only_missing),
         },
     }
 
@@ -143,12 +151,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--task", choices=sorted(TASKS), default="ndvi-grid",
                         help="which task to submit (default: ndvi-grid)")
+    parser.add_argument("--only-missing", action="store_true",
+                        help="ndvi-grid only: skip pilots whose data/pilots/<id>.json already has ndvi")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--dry-run", action="store_true", help="print payloads, do not submit")
     group.add_argument("--status", action="store_true", help="list your recent tasks")
     args = parser.parse_args()
+    if args.only_missing and args.task != "ndvi-grid":
+        parser.error("--only-missing only applies to --task ndvi-grid")
 
-    tasks = [TASKS[args.task]()]
+    tasks = [grid_task(args.only_missing) if args.task == "ndvi-grid" else TASKS[args.task]()]
+    if not tasks[0]["params"].get("coordinates", True):
+        raise SystemExit("Nothing to request: every pilot already has NDVI")
     if args.dry_run:
         print(json.dumps(tasks, indent=2))
         return
