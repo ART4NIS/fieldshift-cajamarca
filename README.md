@@ -27,23 +27,23 @@ Si después de una actualización la página no carga, recárguela sin caché (C
 |---|---|---|
 | Clima mensual y diario 1991–2024 (T2M, T2M_MIN, PRECTOTCORR) | **NASA POWER** (API en vivo) | Núcleo del motor: temperatura, lluvia y frecuencia de heladas por mes |
 | Corrección local de temperatura y lluvia | SENAMHI PISCOt v1.1 y PISCOp v2.1, vía IRI/LDEO Climate Data Library | Corrige el sesgo de POWER, que subestima las heladas en la sierra |
-| Altitud y pendiente | Copernicus DEM 90 m, vía la API de elevación de Open-Meteo | Verifica que el punto esté sobre 2 500 m y calcula la pendiente del punto |
+| Pendiente junto a los pilotos | **NASA SRTM** SRTMGL1_NC.003 (30 m), vía NASA AppEEARS | Pendiente en el punto cuando cae dentro del recorte de unos 5 km alrededor de un piloto, y qué parte de esa zona tiene laderas fuertes |
+| Altitud y pendiente en el resto del área | Copernicus DEM 90 m, vía la API de elevación de Open-Meteo | Verifica que el punto esté sobre 2 500 m y calcula la pendiente fuera de los recortes SRTM |
 | Lagos | OpenStreetMap (ODbL) | Impide marcar el Titicaca o Junín como parcela |
 | Imagen del mapa | Esri World Imagery (satélite, por defecto), NASA GIBS Blue Marble y OpenStreetMap | Fondo del mapa; el usuario elige la capa |
 | Fotos de los cultivos | Wikimedia Commons (autor y licencia en `data/imagenes_cultivos.json` y en cada ficha) | Ilustran cada año de la rotación; son fotos de referencia, no de la parcela |
 | Búsqueda de lugares | OpenStreetMap Nominatim | Ubica un pueblo o distrito por su nombre (1 búsqueda por segundo, sin autocompletar) |
 
-NASA POWER es el único dataset NASA activo en la versión actual. La altitud y la pendiente vienen de Copernicus, no de SRTM.
+Datasets NASA activos: NASA POWER (clima, núcleo del motor) y SRTM (pendiente junto a los pilotos).
 
-### Pendiente de integrar
+### Descargado pero todavía sin usar
 
-Los pedidos a AppEEARS ya están enviados (`scripts/submit_appeears.py`); su procesamiento está en el PR #2 y todavía no hay datos en la app:
+Los dos pedidos de AppEEARS (`scripts/submit_appeears.py`) ya llegaron. MODIS y SMAP no se muestran por estas razones:
 
-- MODIS MOD13Q1.061 (NDVI, 250 m)
-- SMAP SPL3SMP_E.006 (humedad del suelo, 9 km)
-- SRTM SRTMGL1_NC.003 (elevación y pendiente, 30 m)
+- **MODIS MOD13Q1.061 (NDVI, 250 m):** los puntos pedidos son el centro de cada ciudad, así que el NDVI mide techos y calles (0,1 a 0,3), no chacras. Hay que volver a pedirlo en puntos o áreas agrícolas.
+- **SMAP SPL3SMP_E.006 (humedad del suelo, 9 km):** en los 4 pilotos solo el 32 % de los días tiene valor, y ninguno trae la calidad recomendada (algo habitual en terreno montañoso). `scripts/process_appeears.py` los descarta todos.
 
-Mientras falten, el nivel de confianza nunca llega a "Alto".
+Sin NDVI ni humedad del suelo, el nivel de confianza nunca llega a "Alto".
 
 ## 🏔 Zonas con datos
 
@@ -70,6 +70,11 @@ python scripts/build_power_cache.py                                             
 
 node scripts/build_selectable_area.mjs      # área verde: sierra > 2 500 m a < 100 km de un piloto
 node scripts/build_water_mask.mjs           # máscara de lagos desde OpenStreetMap
+
+# Salidas de AppEEARS en raw/appeears/ (no se suben al repo); requieren numpy y rasterio
+pip install -r scripts/requirements.txt
+python scripts/process_appeears.py          # estadísticas de terreno SRTM en data/pilots/<id>.json
+python scripts/build_srtm_grids.py          # recortes SRTM 30 m para el navegador en data/srtm/
 ```
 
 Los scripts de Python usan solo la biblioteca estándar.

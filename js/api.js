@@ -142,6 +142,89 @@ export async function fetchSlope(lat, lon, { fetchImpl = globalThis.fetch, spaci
   }
 }
 
+// ---- NASA SRTM 30 m around the pilots (data/srtm, built by scripts/build_srtm_grids.py) ----
+export const SRTM_FUENTE = "NASA SRTM 30 m (AppEEARS)";
+const M_PER_DEG_LAT = 110540;
+const M_PER_DEG_LON_EQUATOR = 111320;
+
+/** Horn slope (%) for a 3x3 stencil whose cells are `dxM` wide (west-east) and `dyM` tall (north-south). */
+export function slopeFromStencilXY(z, dxM, dyM) {
+  const [a, b, c, d, , f, g, h, i] = z;
+  const dzdx = (c + 2 * f + i - (a + 2 * d + g)) / (8 * dxM);
+  const dzdy = (g + 2 * h + i - (a + 2 * b + c)) / (8 * dyM);
+  return Math.hypot(dzdx, dzdy) * 100;
+}
+
+/** Pixel (row, col) holding the point, or null when the point has no full 3x3 neighbourhood in the grid. */
+function srtmPixel(lat, lon, meta) {
+  const col = Math.floor((lon - meta.west) / meta.res_deg);
+  const row = Math.floor((meta.north - lat) / meta.res_deg);
+  if (col < 1 || row < 1 || col > meta.width - 2 || row > meta.height - 2) return null;
+  return { row, col };
+}
+
+/** [pilotId, meta] of the SRTM grid that covers the point, or null. `index` is data/srtm/index.json. */
+export function srtmAreaAt(lat, lon, index) {
+  for (const [id, meta] of Object.entries(index?.areas ?? {})) {
+    if (srtmPixel(lat, lon, meta)) return [id, meta];
+  }
+  return null;
+}
+
+/** Slope (%) at the point from an elevation grid (Int16Array, row-major from the north-west); null on nodata. */
+export function srtmSlopeAt(lat, lon, grid, meta) {
+  const px = srtmPixel(lat, lon, meta);
+  if (!px || grid.length !== meta.width * meta.height) return null;
+  const z = [];
+  for (const dr of [-1, 0, 1]) {
+    for (const dc of [-1, 0, 1]) z.push(grid[(px.row + dr) * meta.width + px.col + dc]);
+  }
+  if (z.some((v) => v === meta.nodata)) return null;
+  const dxM = meta.res_deg * M_PER_DEG_LON_EQUATOR * Math.cos((lat * Math.PI) / 180);
+  const dyM = meta.res_deg * M_PER_DEG_LAT;
+  return slopeFromStencilXY(z, dxM, dyM);
+}
+
+/**
+ * Slope at a point inside a pilot's SRTM area: { pendiente_pct, fuente } or null (outside every area,
+ * or the grid could not be loaded). Grids are cached in `cache` (pilot id -> Int16Array).
+ */
+export async function fetchSrtmSlope(lat, lon, { index, fetchImpl = globalThis.fetch, cache = new Map() } = {}) {
+  const hit = srtmAreaAt(lat, lon, index);
+  if (!hit) return null;
+  const [id, meta] = hit;
+  try {
+    if (!cache.has(id)) {
+      const res = await fetchImpl(meta.file);
+      if (!res.ok) return null;
+      cache.set(id, new Int16Array(await res.arrayBuffer()));
+    }
+    const pct = srtmSlopeAt(lat, lon, cache.get(id), meta);
+    return pct == null ? null : { pendiente_pct: pct, fuente: SRTM_FUENTE };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Zone slope from the pilot's SRTM statistics (data/pilots/<id>.json "terrain"), used only when no
+ * point slope is available: { pendiente_pct, fuente, zona: true } or null.
+ */
+export function zoneSlope(terrain) {
+  const mediana = terrain?.pendiente_pct?.mediana;
+  if (!Number.isFinite(mediana)) return null;
+  return { pendiente_pct: mediana, fuente: `${SRTM_FUENTE}, mediana de la zona del piloto`, zona: true };
+}
+
+/** Plain-language note on how much of the pilot zone is steep, or null without SRTM statistics. */
+export function zoneSteepNote(terrain, pilotName) {
+  const pct = terrain?.pct_area_pendiente_mayor_25;
+  if (!Number.isFinite(pct)) return null;
+  const parte = pct >= 30 ? "una buena parte" : pct >= 10 ? "una parte" : "muy poco";
+  return `Alrededor del punto piloto ${pilotName}, ${parte} del terreno (${Math.round(pct)} %) son laderas fuertes, ` +
+    "de más de 25 % de pendiente, según el satélite SRTM de la NASA.";
+}
+
 /**
  * Fetch POWER (cache fallback) and return
  * { clima, elevation, elevationSource, corregido, fuente }.

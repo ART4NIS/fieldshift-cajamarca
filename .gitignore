@@ -13,3 +13,6 @@ raw/
 .atl/
 node_modules/
 .cache/
+
+# Raw AppEEARS bundles as downloaded (request JSON files include the Earthdata account e-mail)
+DataAppEEARS/

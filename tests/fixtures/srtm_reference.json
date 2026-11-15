@@ -1,0 +1,26 @@
+{
+  "cajamarca": {
+    "lat": -7.16,
+    "lon": -78.51,
+    "slope_pct": 2.8786,
+    "tif": "SRTMGL1_NC.003_SRTMGL1_DEM_doy2000042000000_aid0001.tif"
+  },
+  "huancayo": {
+    "lat": -12.07,
+    "lon": -75.21,
+    "slope_pct": 3.1078,
+    "tif": "SRTMGL1_NC.003_SRTMGL1_DEM_doy2000042000000_aid0002.tif"
+  },
+  "puno": {
+    "lat": -15.84,
+    "lon": -70.02,
+    "slope_pct": 1.3247,
+    "tif": "SRTMGL1_NC.003_SRTMGL1_DEM_doy2000042000000_aid0003.tif"
+  },
+  "cusco": {
+    "lat": -13.52,
+    "lon": -71.97,
+    "slope_pct": 3.5515,
+    "tif": "SRTMGL1_NC.003_SRTMGL1_DEM_doy2000042000000_aid0004.tif"
+  }
+}
