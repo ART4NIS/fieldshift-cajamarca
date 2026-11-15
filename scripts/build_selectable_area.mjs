@@ -1,5 +1,7 @@
-// Builds data/selectable_area.geojson: the land at or above 2,500 m within RADIUS_KM of each available
-// pilot, excluding lakes. This is the area where map clicks are accepted (see js/ui.js).
+// Builds data/selectable_area.geojson: the land at or above 2,500 m, excluding lakes. This is the area
+// where map clicks are accepted (see js/ui.js). Two modes:
+//   default         one feature per available pilot, limited to RADIUS_KM around it;
+//   --whole-sierra  one feature for all of Peru's sierra, clipped to data/peru_boundary.geojson.
 //
 // Method: sample elevation on a regular lat/lon grid (Open-Meteo elevation API, Copernicus DEM 90 m,
 // max 100 coordinates per request), blank every cell outside the circle or inside a lake
@@ -7,19 +9,18 @@
 // marching squares (d3-contour, devDependency used only here; the browser never loads it).
 //
 // Usage: node scripts/build_selectable_area.mjs [--radius-km=100] [--spacing=0.05] [--threshold=2500]
+//        node scripts/build_selectable_area.mjs --whole-sierra [--spacing=0.05]
 //
-// "Whole sierra" (option B): the radius is a parameter. To drop the per-pilot circle limit later, pass a
-// very large --radius-km (grid size grows with its square, so also raise --spacing) or replace the
-// circle test in `insideCircle()` with a Peru-wide bounding test. Option B is NOT implemented here.
-//
-// Elevation responses are cached in .cache/ (gitignored) so reruns do not refetch.
+// Elevations are cached in .cache/elev_points.json (gitignored). --whole-sierra never calls Open-Meteo:
+// fill the cache first with `python scripts/build_dem_grid.py` (Copernicus DEM tiles, no quota).
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { contours } from "d3-contour";
-import { distanceKm, isOnWater } from "../js/api.js";
+import { distanceKm, isOnWater, inSelectableArea } from "../js/api.js";
 
 const args = Object.fromEntries(
-  process.argv.slice(2).map((a) => a.replace(/^--/, "").split("=")).map(([k, v]) => [k, Number(v)]),
+  process.argv.slice(2).map((a) => a.replace(/^--/, "").split("=")).map(([k, v]) => [k, v === undefined ? true : Number(v)]),
 );
+const WHOLE_SIERRA = args["whole-sierra"] === true;
 const RADIUS_KM = args["radius-km"] ?? 100;
 const SPACING = args.spacing ?? 0.05; // degrees (~5.5 km); 0.025 needs ~4x the API quota
 const THRESHOLD_M = args.threshold ?? 2500;
@@ -30,8 +31,9 @@ const SENTINEL = -500; // outside the circle: far below the threshold, the conto
 const LAKE_VALUE = THRESHOLD_M - 1;
 const BATCH = 100; // Open-Meteo hard limit per request
 // Open-Meteo free tier counts every coordinate: 600 per minute, 5,000 per hour, 10,000 per day.
-// 100-coordinate requests spaced 13 s apart stay under the per-minute limit (~460 coordinates/min).
-const THROTTLE_MS = 13000;
+// 100-coordinate requests spaced 75 s apart stay under the per-hour limit (4,800 coordinates/hour).
+// A run that hits the daily limit stops; rerun it the next day and the cache resumes where it left off.
+const THROTTLE_MS = 75000;
 const SIMPLIFY_DEG = 0.004; // ~450 m
 const MIN_PART_CELLS = 1.5; // drop islands/holes smaller than this many grid cells
 const KM_PER_DEG = 111.195;
@@ -41,6 +43,7 @@ const OUT = new URL("../data/selectable_area.geojson", import.meta.url);
 const readJson = (rel) => JSON.parse(readFileSync(new URL(rel, import.meta.url), "utf-8"));
 const pilots = readJson("../data/pilots_index.json").pilotos.filter((p) => p.disponible !== false);
 const water = readJson("../data/water_mask.geojson");
+const peru = WHOLE_SIERRA ? readJson("../data/peru_boundary.geojson") : null;
 
 let requests = 0;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -68,22 +71,45 @@ async function fetchBatch(lats, lons) {
 
 const round = (x, d) => Number(x.toFixed(d));
 
-/** Grid aligned to multiples of SPACING covering the circle's bounding box. */
-function gridFor(p) {
+/** Grid aligned to multiples of SPACING covering a bounding box. */
+function gridForBox(south, west, north, east) {
+  const lon0 = Math.floor(west / SPACING) * SPACING;
+  const lat1 = Math.ceil(north / SPACING) * SPACING; // north edge
+  const w = Math.ceil((east - lon0) / SPACING) + 1;
+  const h = Math.ceil((lat1 - south) / SPACING) + 1;
+  return { lon0, lat1, w, h };
+}
+
+/** A region to contour: its grid and the test for cells that may belong to the area. */
+function circleRegion(p) {
   const dLat = RADIUS_KM / KM_PER_DEG;
   const dLon = RADIUS_KM / (KM_PER_DEG * Math.cos((p.lat * Math.PI) / 180));
-  const lon0 = Math.floor((p.lon - dLon) / SPACING) * SPACING;
-  const lat1 = Math.ceil((p.lat + dLat) / SPACING) * SPACING; // north edge
-  const w = Math.ceil((p.lon + dLon - lon0) / SPACING) + 1;
-  const h = Math.ceil((lat1 - (p.lat - dLat)) / SPACING) + 1;
-  return { lon0, lat1, w, h };
+  return {
+    id: p.id,
+    properties: { pilot_id: p.id, nombre: p.nombre ?? p.id },
+    grid: gridForBox(p.lat - dLat, p.lon - dLon, p.lat + dLat, p.lon + dLon),
+    inside: (lat, lon) => distanceKm(lat, lon, p.lat, p.lon) <= RADIUS_KM,
+  };
+}
+
+function peruRegion() {
+  const ring = peru.features[0].geometry.coordinates[0];
+  const lons = ring.map(([x]) => x);
+  const lats = ring.map(([, y]) => y);
+  return {
+    id: "sierra",
+    properties: { region: "sierra", nombre: "Sierra del Perú" },
+    grid: gridForBox(Math.min(...lats), Math.min(...lons), Math.max(...lats), Math.max(...lons)),
+    inside: (lat, lon) => inSelectableArea(lat, lon, peru),
+  };
 }
 
 /**
  * Elevations for every grid cell. Cache is a point map ("lat,lon" -> m) in .cache/, so a rerun, or a
  * different spacing on the same lattice, only fetches the missing points.
  */
-async function loadElevations(p, g) {
+async function loadElevations(region) {
+  const g = region.grid;
   mkdirSync(CACHE_DIR, { recursive: true });
   const file = new URL("elev_points.json", CACHE_DIR);
   const cache = existsSync(file) ? JSON.parse(readFileSync(file, "utf-8")) : {};
@@ -91,10 +117,13 @@ async function loadElevations(p, g) {
   const lat = (i) => round(g.lat1 - Math.floor(i / g.w) * SPACING, 4);
   const lon = (i) => round(g.lon0 + (i % g.w) * SPACING, 4);
   const key = (i) => `${lat(i)},${lon(i)}`;
-  // Only cells inside the circle and off the lakes can end up in the area: do not spend quota on the rest.
-  const needed = (i) => insideCircle(p, lat(i), lon(i)) && !isOnWater(lat(i), lon(i), water);
+  // Only cells inside the region and off the lakes can end up in the area: do not spend quota on the rest.
+  const needed = (i) => region.inside(lat(i), lon(i)) && !isOnWater(lat(i), lon(i), water);
   const missing = Array.from({ length: total }, (_, i) => i).filter((i) => needed(i) && !(key(i) in cache));
-  console.log(`  ${p.id}: ${total - missing.length} cached, ${missing.length} to fetch`);
+  console.log(`  ${region.id}: ${total - missing.length} cached, ${missing.length} to fetch`);
+  if (WHOLE_SIERRA && missing.length) {
+    throw new Error(`${missing.length} points missing: run python scripts/build_dem_grid.py --spacing ${SPACING}`);
+  }
   for (let k = 0; k < missing.length; k += BATCH) {
     const idx = missing.slice(k, k + BATCH);
     const part = await fetchBatch(idx.map(lat), idx.map(lon));
@@ -138,19 +167,16 @@ const ringArea = (r) => Math.abs(r.reduce((s, [x, y], i) => {
   return s + (x * y2 - x2 * y);
 }, 0)) / 2;
 
-/** Closed ring of [lon, lat] around a pilot, used to blank cells outside the circle. */
-const insideCircle = (p, lat, lon) => distanceKm(lat, lon, p.lat, p.lon) <= RADIUS_KM;
-
-function buildFeature(p) {
+function buildFeature(region) {
   return async () => {
-    const g = gridFor(p);
-    console.log(`${p.id}: grid ${g.w} x ${g.h} = ${g.w * g.h} cells`);
-    const elev = await loadElevations(p, g);
+    const g = region.grid;
+    console.log(`${region.id}: grid ${g.w} x ${g.h} = ${g.w * g.h} cells`);
+    const elev = await loadElevations(region);
     const values = new Float64Array(g.w * g.h);
     for (let i = 0; i < values.length; i++) {
       const lat = g.lat1 - Math.floor(i / g.w) * SPACING;
       const lon = g.lon0 + (i % g.w) * SPACING;
-      if (!insideCircle(p, lat, lon)) values[i] = SENTINEL;
+      if (!region.inside(lat, lon)) values[i] = SENTINEL;
       else if (isOnWater(lat, lon, water)) values[i] = LAKE_VALUE;
       else values[i] = Number.isFinite(elev[i]) ? elev[i] : SENTINEL;
     }
@@ -169,7 +195,7 @@ function buildFeature(p) {
     }
     return {
       type: "Feature",
-      properties: { pilot_id: p.id, nombre: p.nombre ?? p.id },
+      properties: region.properties,
       geometry: { type: "MultiPolygon", coordinates: polygons },
     };
   };
@@ -177,15 +203,20 @@ function buildFeature(p) {
 
 const t0 = Date.now();
 const features = [];
-for (const p of pilots) features.push(await buildFeature(p)());
+const regions = WHOLE_SIERRA ? [peruRegion()] : pilots.map(circleRegion);
+for (const r of regions) features.push(await buildFeature(r)());
 
 const out = {
   type: "FeatureCollection",
   properties: {
-    description: "Selectable area: land at or above the threshold within radius_km of each pilot; lakes are excluded only to grid resolution (the lake itself is rejected by water_mask.geojson).",
-    source: "Copernicus DEM 90 m via Open-Meteo elevation API; lakes from data/water_mask.geojson",
+    description: WHOLE_SIERRA
+      ? "Selectable area: land in Peru at or above the threshold; lakes are excluded only to grid resolution (the lake itself is rejected by water_mask.geojson)."
+      : "Selectable area: land at or above the threshold within radius_km of each pilot; lakes are excluded only to grid resolution (the lake itself is rejected by water_mask.geojson).",
+    source: WHOLE_SIERRA
+      ? "Copernicus DEM GLO-90 tiles (AWS open data, 4x overview); Peru boundary from OpenStreetMap; lakes from data/water_mask.geojson"
+      : "Copernicus DEM 90 m via Open-Meteo elevation API; lakes from data/water_mask.geojson",
     threshold_m: THRESHOLD_M,
-    radius_km: RADIUS_KM,
+    radius_km: WHOLE_SIERRA ? null : RADIUS_KM,
     grid_spacing_deg: SPACING,
     generated: new Date().toISOString().slice(0, 10),
   },
@@ -194,4 +225,4 @@ const out = {
 writeFileSync(OUT, JSON.stringify(out));
 const vertices = (f) => f.geometry.coordinates.reduce((s, poly) => s + poly.reduce((a, r) => a + r.length, 0), 0);
 console.log(`requests: ${requests}, time: ${((Date.now() - t0) / 1000).toFixed(1)} s`);
-for (const f of features) console.log(`${f.properties.pilot_id}: ${f.geometry.coordinates.length} polygons, ${vertices(f)} vertices`);
+for (const f of features) console.log(`${f.properties.pilot_id ?? f.properties.region}: ${f.geometry.coordinates.length} polygons, ${vertices(f)} vertices`);

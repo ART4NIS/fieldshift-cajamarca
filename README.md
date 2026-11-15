@@ -47,13 +47,13 @@ Sin NDVI ni humedad del suelo, el nivel de confianza nunca llega a "Alto".
 
 ## 🏔 Zonas con datos
 
-Pilotos: Cajamarca (-7.16, -78.51), Huancayo, Puno y Cusco. Se puede marcar cualquier punto de la sierra sobre 2 500 m a menos de 100 km de un piloto (área verde del mapa):
+Hay 22 pilotos repartidos por la sierra (lista en `data/pilots_index.json`). Se puede marcar cualquier punto de la sierra del Perú sobre 2 500 m (área verde del mapa):
 
 - **Piloto (≤ 10 km):** corrección PISCO precalculada en `data/pilots/<id>.json`.
 - **Otro punto del área:** la corrección PISCO se calcula en el navegador para ese punto (puede tardar hasta un minuto la primera vez y luego queda guardada).
 - **Si ese cálculo falla:** se usa la corrección del piloto más cercano, se avisa la distancia y la confianza baja.
 
-Agregar un piloto es agregar su JSON en `data/pilots/` y su entrada en `data/pilots_index.json`, y regenerar el área.
+Agregar un piloto es agregar su entrada en `data/pilots_index.json` y generar su corrección y su caché de POWER con los scripts de abajo. El área no depende de los pilotos.
 
 ## ⚙️ Cómo reproducirlo
 
@@ -68,7 +68,8 @@ python scripts/build_climate_bias.py --pilot cajamarca --lat -7.16 --lon -78.51 
 python scripts/build_climate_fixture.py --pilot cajamarca                         # entrada mensual de referencia del motor
 python scripts/build_power_cache.py                                               # caché de NASA POWER de los pilotos
 
-node scripts/build_selectable_area.mjs      # área verde: sierra > 2 500 m a < 100 km de un piloto
+python scripts/build_dem_grid.py                       # elevación Copernicus DEM de todo el Perú (sin cuota)
+node scripts/build_selectable_area.mjs --whole-sierra  # área verde: sierra del Perú > 2 500 m
 node scripts/build_water_mask.mjs           # máscara de lagos desde OpenStreetMap
 
 # Salidas de AppEEARS en raw/appeears/ (no se suben al repo); requieren numpy y rasterio

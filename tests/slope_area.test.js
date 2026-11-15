@@ -64,20 +64,30 @@ test("inSelectableArea: respects holes and null", () => {
   assert.equal(inSelectableArea(2, 2, null), false);
 });
 
-test("generated selectable area: sierra cities in, lowlands, lakes and far points out", () => {
+test("generated selectable area: Peru's sierra in, lowlands, lakes and other countries out", () => {
   const area = load("../data/selectable_area.geojson");
   const water = load("../data/water_mask.geojson");
   assert.equal(area.properties.threshold_m, 2500);
-  assert.equal(area.features.length, 4);
-  const inside = { Cusco: [-13.52, -71.97], Huancayo: [-12.07, -75.21], Puno: [-15.84, -70.02], Cajamarca: [-7.16, -78.51] };
+  assert.equal(area.features.length, 1);
+  assert.equal(area.features[0].properties.region, "sierra");
+  const inside = {
+    Cusco: [-13.52, -71.97],
+    Huancayo: [-12.07, -75.21],
+    Puno: [-15.84, -70.02],
+    Cajamarca: [-7.16, -78.51],
+    Huaraz: [-9.53, -77.53],
+    Ayacucho: [-13.16, -74.22],
+    Huancavelica: [-12.79, -74.97],
+  };
   for (const [name, [lat, lon]] of Object.entries(inside)) {
     assert.equal(inSelectableArea(lat, lon, area), true, `${name} should be inside`);
   }
   const outside = {
     Lima: [-12.05, -77.04],
     "Lago Titicaca": [-15.8, -69.6],
-    "150 km from any pilot": [-10.0, -76.0],
+    "Pucallpa (Amazon lowland)": [-8.38, -74.55],
     "Urubamba valley (Machu Picchu)": [-13.16, -72.55],
+    "La Paz (Bolivian altiplano)": [-16.5, -68.15],
   };
   for (const [name, [lat, lon]] of Object.entries(outside)) {
     assert.equal(inSelectableArea(lat, lon, area), false, `${name} should be outside`);
